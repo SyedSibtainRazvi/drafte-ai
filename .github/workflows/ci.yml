@@ -10,6 +10,7 @@ jobs:
 
     env:
       DATABASE_URL: "postgresql://user:password@localhost:5432/test_db?sslmode=disable"
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
 
     strategy:
       matrix:

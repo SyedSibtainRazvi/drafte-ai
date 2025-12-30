@@ -28,7 +28,7 @@ model Component {
 
 model Project {
   id                    String             @id @db.Uuid
-  userId                String             @db.Uuid
+  userId                String
   name                  String?
   description           String?
   prompt                String
@@ -44,7 +44,7 @@ model Project {
   resolutionSpec        Json?
   resolutionSpecVersion String?            @default("v1")
   messages              Json               @default("[]")
-  User                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  User                  User               @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
   ProjectComponent      ProjectComponent[]
 
   @@index([status])
@@ -73,11 +73,10 @@ model User {
   email     String    @unique
   createdAt DateTime  @default(now())
   updatedAt DateTime
-  clerkId   String    @unique
+  clerkId   String    @id
   firstName String?
   imageUrl  String?
   lastName  String?
-  id        String    @id @db.Uuid
   Project   Project[]
 }
 
