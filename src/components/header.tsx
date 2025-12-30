@@ -3,8 +3,8 @@
 import { UserButton, useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
-import { ModeToggle } from "@/components/ui/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { ModeToggle } from "@/components/ui/theme-toggle";
 import logo from "../../public/drafte.svg";
 
 export function Header() {
