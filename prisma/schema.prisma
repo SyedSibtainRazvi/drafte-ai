@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Component {
+  id             String   @id @db.Uuid
+  name           String
+  category       String?
+  description    String?
+  aliases        String[] @default([])
+  tags           String[] @default([])
+  propsSchema    Json?
+  isActive       Boolean  @default(true)
+  version        String   @default("1.0")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  componentKey   String   @unique
+  decisionSchema Json?
+
+  @@index([category])
+  @@index([isActive])
+}
+
+model Project {
+  id                    String             @id @db.Uuid
+  userId                String             @db.Uuid
+  name                  String?
+  description           String?
+  prompt                String
+  status                ProjectStatus      @default(DRAFT)
+  deploymentAppId       String?
+  deploymentUrl         String?
+  previewUrl            String?
+  inactivityAt          DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime
+  intentSpec            Json?
+  intentSpecVersion     String?            @default("v1")
+  resolutionSpec        Json?
+  resolutionSpecVersion String?            @default("v1")
+  messages              Json               @default("[]")
+  User                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ProjectComponent      ProjectComponent[]
+
+  @@index([status])
+  @@index([userId])
+}
+
+model ProjectComponent {
+  id           String   @id @db.Uuid
+  projectId    String   @db.Uuid
+  position     Int
+  selected     Boolean  @default(true)
+  content      Json?
+  meta         Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  componentKey String
+  decisions    Json?
+  Project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, position])
+  @@index([componentKey])
+  @@index([projectId])
+}
+
+model User {
+  email     String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime
+  clerkId   String    @unique
+  firstName String?
+  imageUrl  String?
+  lastName  String?
+  id        String    @id @db.Uuid
+  Project   Project[]
+}
+
+enum ProjectStatus {
+  DRAFT
+  PROCESSING
+  DISCOVERED
+  CONTENT_GENERATING
+  CONTENT_GENERATED
+  DEPLOYING
+  DEPLOYED
+  FAILED
+  ARCHIVED
+}
