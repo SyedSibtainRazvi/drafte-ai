@@ -1,7 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { Webhook } from "svix";
-import { prisma } from "@/app/lib/prisma";
 
 type WebhookEvent = {
   type: string;
@@ -20,6 +19,9 @@ type WebhookEvent = {
 
 export async function POST(request: NextRequest) {
   try {
+    // Dynamic import to avoid Prisma initialization during Next.js build time
+    // This prevents DATABASE_URL errors when collecting page data
+    const { prisma } = await import("@/app/lib/prisma");
     const svixId = request.headers.get("svix-id");
     const svixTimestamp = request.headers.get("svix-timestamp");
     const svixSignature = request.headers.get("svix-signature");
