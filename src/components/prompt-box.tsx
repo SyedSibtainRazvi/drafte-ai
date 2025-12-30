@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { BorderMagicButton } from "@/components/ui/border-magic-button";
-import {
-  PromptInput,
-  PromptInputTextarea,
-} from "../../cosmos-ai/web/components/ui/prompt-input";
+import { PromptInput, PromptInputTextarea } from "@/components/ui/prompt-input";
 
 export function PromptBox() {
   const [prompt, setPrompt] = useState("");
