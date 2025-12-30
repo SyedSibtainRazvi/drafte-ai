@@ -1,14 +1,23 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { useState } from "react";
 import { BorderMagicButton } from "@/components/ui/border-magic-button";
 import { PromptInput, PromptInputTextarea } from "@/components/ui/prompt-input";
 
 export function PromptBox() {
+  const { isSignedIn } = useUser();
+  const router = useRouter();
   const [prompt, setPrompt] = useState("");
   const [isLoading, _setIsLoading] = useState(false);
 
-  const handleSubmit = async () => {};
+  const handleSubmit = async () => {
+    if (!isSignedIn) {
+      router.push("/sign-up");
+      return;
+    }
+  };
 
   return (
     <div className="mt-12 max-w-2xl mx-auto space-y-4">
