@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
         await prisma.$connect();
         return NextResponse.json({
           success: true,
-          message: "Database connected successfully"
+          message: "Database connected successfully",
         });
       } catch (error) {
         console.error("Webhook error: Database connection failed", error);
@@ -82,7 +82,8 @@ export async function POST(request: NextRequest) {
     const eventType = evt.type;
 
     if (eventType === "user.created" || eventType === "user.updated") {
-      const { id, email_addresses, first_name, last_name, image_url } = evt.data;
+      const { id, email_addresses, first_name, last_name, image_url } =
+        evt.data;
 
       const primaryEmail = email_addresses?.find(
         (email) => email.id === evt.data.primary_email_address_id,
@@ -140,7 +141,6 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ received: true });
-    
   } catch (error) {
     console.error("Webhook error:", error);
     return NextResponse.json(
