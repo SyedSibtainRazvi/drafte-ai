@@ -23,7 +23,7 @@ CREATE TABLE "Component" (
 -- CreateTable
 CREATE TABLE "Project" (
     "id" UUID NOT NULL,
-    "userId" UUID NOT NULL,
+    "userId" TEXT NOT NULL,
     "name" TEXT,
     "description" TEXT,
     "prompt" TEXT NOT NULL,
@@ -68,9 +68,8 @@ CREATE TABLE "User" (
     "firstName" TEXT,
     "imageUrl" TEXT,
     "lastName" TEXT,
-    "id" UUID NOT NULL,
 
-    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "User_pkey" PRIMARY KEY ("clerkId")
 );
 
 -- CreateIndex
@@ -100,11 +99,8 @@ CREATE UNIQUE INDEX "ProjectComponent_projectId_position_key" ON "ProjectCompone
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
--- CreateIndex
-CREATE UNIQUE INDEX "User_clerkId_key" ON "User"("clerkId");
-
 -- AddForeignKey
-ALTER TABLE "Project" ADD CONSTRAINT "Project_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Project" ADD CONSTRAINT "Project_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("clerkId") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ProjectComponent" ADD CONSTRAINT "ProjectComponent_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
