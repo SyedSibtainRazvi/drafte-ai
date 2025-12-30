@@ -47,3 +47,4 @@ cosmos-ai
 /.clerk/
 
 /src/generated/prisma
+.env*.local
