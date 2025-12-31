@@ -1,11 +1,11 @@
+import { SidebarProvider } from "@/components/ui/sidebar";
+
 export default function ProjectsLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="flex-1">{children}</div>
-    </div>
+    <SidebarProvider className="bg-background">{children}</SidebarProvider>
   );
 }

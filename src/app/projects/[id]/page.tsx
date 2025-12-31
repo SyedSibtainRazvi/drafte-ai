@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ProjectChatSidebar } from "@/components/project-chat-sidebar";
 import type { Project } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 
@@ -67,23 +68,5 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     notFound();
   }
 
-  return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-4">Project Details</h1>
-      <div className="bg-card p-6 rounded-lg border">
-        <p>
-          <strong>ID:</strong> {project.id}
-        </p>
-        <p>
-          <strong>Prompt:</strong> {project.prompt}
-        </p>
-        <p>
-          <strong>Status:</strong> {project.status}
-        </p>
-        <p>
-          <strong>Created:</strong> {project.createdAt.toLocaleString()}
-        </p>
-      </div>
-    </div>
-  );
+  return <ProjectChatSidebar project={project} />;
 }
