@@ -1,4 +1,3 @@
-// app/api/chat/route.ts
 export const runtime = "nodejs";
 
 import { nanoid } from "nanoid";
@@ -30,7 +29,12 @@ export async function POST(req: Request) {
     async start(controller) {
       const encoder = new TextEncoder();
 
-      const send = (event: any) => {
+      type ChatEvent =
+        | { type: "chat_token"; value: string }
+        | { type: "chat_done" }
+        | { type: "error"; message: string };
+
+      const send = (event: ChatEvent) => {
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify(event)}\n\n`),
         );

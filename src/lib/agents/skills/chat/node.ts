@@ -24,7 +24,7 @@ export async function chatNode(
     streaming: true,
   });
 
-  const response = await llm.invoke([
+  const _response = await llm.invoke([
     { role: "system", content: SKILL_INSTRUCTIONS },
     { role: "user", content: state.input },
   ]);

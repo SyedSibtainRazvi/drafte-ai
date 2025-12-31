@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Message = {
   role: "user" | "assistant";
@@ -11,6 +11,25 @@ export function ProjectChat({ projectId }: { projectId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    async function loadHistory() {
+      const res = await fetch(`/api/chat/history?projectId=${projectId}`);
+
+      if (!res.ok) return;
+
+      const data: Message[] = await res.json();
+
+      setMessages(
+        data.map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+      );
+    }
+
+    loadHistory();
+  }, [projectId]);
 
   async function sendMessage() {
     if (!input.trim()) return;
@@ -69,7 +88,7 @@ export function ProjectChat({ projectId }: { projectId: string }) {
     <div className="flex flex-col border rounded-md h-[300px]">
       <div className="flex-1 overflow-auto p-3 space-y-2 text-sm">
         {messages.map((m, i) => (
-          <div key={i}>
+          <div key={`${m.role}-${i}`}>
             <strong className="capitalize">{m.role}:</strong> {m.content}
           </div>
         ))}
@@ -83,6 +102,7 @@ export function ProjectChat({ projectId }: { projectId: string }) {
           placeholder="Ask something about your project…"
         />
         <button
+          type="button"
           onClick={sendMessage}
           disabled={loading}
           className="border rounded px-3"
