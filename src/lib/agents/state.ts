@@ -7,6 +7,8 @@
  */
 
 import { Annotation } from "@langchain/langgraph";
+import type { SelectedSkill } from "./router/types";
+import type { DiscoveryOutput } from "./skills/discovery/schema";
 
 export const ProjectStateAnnotation = Annotation.Root({
   // Unique run / conversation ID
@@ -22,7 +24,9 @@ export const ProjectStateAnnotation = Annotation.Root({
   }),
 
   // Minimal lifecycle status
-  status: Annotation<"IDLE" | "STREAMING" | "AWAITING_INPUT" | "FAILED">({
+  status: Annotation<
+    "IDLE" | "STREAMING" | "AWAITING_INPUT" | "FAILED" | "DISCOVERED"
+  >({
     reducer: (_x, y) => y ?? "AWAITING_INPUT",
     default: () => "AWAITING_INPUT",
   }),
@@ -30,6 +34,16 @@ export const ProjectStateAnnotation = Annotation.Root({
   history: Annotation<{ role: "user" | "assistant"; content: string }[]>({
     reducer: (_x, y) => y ?? [],
     default: () => [],
+  }),
+
+  discovery: Annotation<DiscoveryOutput | null>({
+    reducer: (_x, y) => y ?? null,
+    default: () => null,
+  }),
+
+  selectedSkill: Annotation<SelectedSkill | null>({
+    reducer: (_x, y) => y ?? null,
+    default: () => null,
   }),
 });
 
