@@ -2,21 +2,21 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import matter from "gray-matter";
 import { ChatOpenAI } from "@langchain/openai";
+import matter from "gray-matter";
 import type { ProjectState } from "../../state";
 
 const SKILL_MD_PATH = path.join(
   process.cwd(),
-  "src/lib/agents/skills/chat/SKILL.md"
+  "src/lib/agents/skills/chat/SKILL.md",
 );
 
 const { content: SKILL_INSTRUCTIONS } = matter(
-  fs.readFileSync(SKILL_MD_PATH, "utf-8")
+  fs.readFileSync(SKILL_MD_PATH, "utf-8"),
 );
 
 export async function chatNode(
-  state: ProjectState
+  state: ProjectState,
 ): Promise<Partial<ProjectState>> {
   const llm = new ChatOpenAI({
     modelName: "gpt-4o-mini",

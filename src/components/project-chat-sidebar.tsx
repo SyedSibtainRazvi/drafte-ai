@@ -35,10 +35,10 @@ export function ProjectChatSidebar({ project }: ProjectChatSidebarProps) {
                     width={80}
                     height={80}
                     priority={true}
-                    />
+                  />
                 </div>
               </SidebarMenuButton>
-                <ProjectChat projectId={project.id} />
+              <ProjectChat projectId={project.id} />
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>

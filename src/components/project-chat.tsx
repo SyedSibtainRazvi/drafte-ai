@@ -70,8 +70,7 @@ export function ProjectChat({ projectId }: { projectId: string }) {
       <div className="flex-1 overflow-auto p-3 space-y-2 text-sm">
         {messages.map((m, i) => (
           <div key={i}>
-            <strong className="capitalize">{m.role}:</strong>{" "}
-            {m.content}
+            <strong className="capitalize">{m.role}:</strong> {m.content}
           </div>
         ))}
       </div>

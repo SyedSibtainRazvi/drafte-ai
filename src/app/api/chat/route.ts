@@ -1,11 +1,11 @@
 // app/api/chat/route.ts
 export const runtime = "nodejs";
 
-import { NextResponse } from "next/server";
 import { nanoid } from "nanoid";
+import { NextResponse } from "next/server";
 import { createWorkflow } from "@/lib/agents/graph";
 import type { ProjectState } from "@/lib/agents/state";
-// import { persistEvent } from "@/lib/db/events"; // optional for now
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -16,6 +16,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing input" }, { status: 400 });
   }
 
+  await prisma.chatMessage.create({
+    data: {
+      projectId: runId,
+      role: "user",
+      content: input,
+    },
+  });
+
   const workflow = await createWorkflow();
 
   const stream = new ReadableStream({
@@ -24,9 +32,11 @@ export async function POST(req: Request) {
 
       const send = (event: any) => {
         controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify(event)}\n\n`)
+          encoder.encode(`data: ${JSON.stringify(event)}\n\n`),
         );
       };
+
+      let assistantText = "";
 
       try {
         const initialState: ProjectState = {
@@ -39,20 +49,27 @@ export async function POST(req: Request) {
           callbacks: [
             {
               handleLLMNewToken(token) {
-                const event = {
+                assistantText += token;
+                send({
                   type: "chat_token",
                   value: token,
-                };
-
-                // persistEvent(runId, "chat_token", event); // later
-                send(event);
+                });
               },
             },
           ],
         });
 
+        await prisma.chatMessage.create({
+          data: {
+            projectId: runId,
+            role: "assistant",
+            content: assistantText,
+          },
+        });
+
         send({ type: "chat_done" });
       } catch (error) {
+        console.error("Chat error:", error);
         send({
           type: "error",
           message: "Something went wrong",
@@ -67,7 +84,7 @@ export async function POST(req: Request) {
     headers: {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
-      "Connection": "keep-alive",
+      Connection: "keep-alive",
     },
   });
 }
