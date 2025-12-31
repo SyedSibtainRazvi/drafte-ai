@@ -14,7 +14,8 @@
       "!dist",
       "!build",
       "!src/generated",
-      "!src/components/ui"
+      "!src/components/ui",
+      "!src/component-library"
     ]
   },
   "formatter": {
