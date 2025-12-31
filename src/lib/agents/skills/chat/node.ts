@@ -24,14 +24,38 @@ export async function chatNode(
     streaming: true,
   });
 
-  const _response = await llm.invoke([
-    { role: "system", content: SKILL_INSTRUCTIONS },
-    { role: "user", content: state.input },
-  ]);
+  /**
+   * Build the prompt in this order:
+   * 1. System instructions
+   * 2. Last N messages from DB (history)
+   * 3. Current user input
+   */
+  const messages = [
+    {
+      role: "system",
+      content: SKILL_INSTRUCTIONS,
+    },
+
+    // ✅ Multi-turn context from DB (read-only)
+    ...state.history.map((m) => ({
+      role: m.role,
+      content: m.content,
+    })),
+
+    // ✅ Current user message
+    {
+      role: "user",
+      content: state.input,
+    },
+  ];
+
+  // Invoke LLM (tokens streamed via callbacks in API route)
+  await llm.invoke(messages);
 
   return {
     status: "AWAITING_INPUT",
-    // NOTE: we do NOT store messages in state
-    // The content will be streamed via callbacks instead
+    // IMPORTANT:
+    // - We do NOT return messages here
+    // - Streaming + persistence is handled outside the graph
   };
 }

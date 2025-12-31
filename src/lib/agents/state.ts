@@ -26,6 +26,11 @@ export const ProjectStateAnnotation = Annotation.Root({
     reducer: (_x, y) => y ?? "AWAITING_INPUT",
     default: () => "AWAITING_INPUT",
   }),
+
+  history: Annotation<{ role: "user" | "assistant"; content: string }[]>({
+    reducer: (_x, y) => y ?? [],
+    default: () => [],
+  }),
 });
 
 export type ProjectState = typeof ProjectStateAnnotation.State;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Message = {
   role: "user" | "assistant";
@@ -11,6 +11,7 @@ export function ProjectChat({ projectId }: { projectId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function loadHistory() {
@@ -54,39 +55,60 @@ export function ProjectChat({ projectId }: { projectId: string }) {
     let assistantContent = "";
     setMessages((m) => [...m, { role: "assistant", content: "" }]);
 
+    let buffer = "";
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value, { stream: true });
-      const events = chunk.split("\n\n");
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split("\n\n");
+      buffer = parts.pop() || ""; // Keep the last incomplete part in the buffer
 
-      for (const evt of events) {
+      for (const evt of parts) {
         if (!evt.startsWith("data: ")) continue;
-        const event = JSON.parse(evt.replace("data: ", ""));
+        const msgBody = evt.replace("data: ", "").trim();
+        if (!msgBody) continue;
 
-        if (event.type === "chat_token") {
-          assistantContent += event.value;
-          setMessages((m) => {
-            const copy = [...m];
-            copy[copy.length - 1] = {
-              role: "assistant",
-              content: assistantContent,
-            };
-            return copy;
-          });
-        }
+        try {
+          const event = JSON.parse(msgBody);
 
-        if (event.type === "chat_done") {
-          setLoading(false);
+          if (event.type === "chat_token") {
+            assistantContent += event.value;
+            setMessages((m) => {
+              const copy = [...m];
+              copy[copy.length - 1] = {
+                role: "assistant",
+                content: assistantContent,
+              };
+              return copy;
+            });
+          }
+
+          if (event.type === "chat_done") {
+            setLoading(false);
+          }
+        } catch (e) {
+          console.error("Failed to parse SSE event:", e, "Event content:", evt);
         }
       }
     }
   }
 
+  // Auto-scroll to bottom
+  // biome-ignore lint/correctness/useExhaustiveDependencies: We need to trigger scroll when messages change
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   return (
-    <div className="flex flex-col border rounded-md h-[300px]">
-      <div className="flex-1 overflow-auto p-3 space-y-2 text-sm">
+    <div className="flex flex-col border rounded-md h-[400px]">
+      <div
+        ref={scrollRef}
+        id="chat-messages"
+        className="flex-1 overflow-auto p-3 space-y-2 text-sm"
+      >
         {messages.map((m, i) => (
           <div key={`${m.role}-${i}`}>
             <strong className="capitalize">{m.role}:</strong> {m.content}
