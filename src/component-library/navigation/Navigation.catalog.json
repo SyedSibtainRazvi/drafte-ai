@@ -1,0 +1,95 @@
+{
+  "component": {
+    "id": "navigation",
+    "name": "Navigation",
+    "category": "navigation",
+    "description": "Primary site navigation with responsive layout and optional CTA",
+    "tags": [
+      "navigation",
+      "navbar",
+      "header",
+      "menu",
+      "responsive",
+      "mobile",
+      "shadcn"
+    ],
+    "intents": ["marketing", "portfolio", "product", "dashboard"],
+    "useCases": [
+      "Main site navigation",
+      "Landing page header",
+      "Product or dashboard header"
+    ],
+    "baseCapabilities": {
+      "responsive": true,
+      "accessible": true,
+      "supportsMobileMenu": true
+    },
+    "dependencies": ["lucide-react", "shadcn/ui", "tailwindcss"],
+    "contentSchema": {
+      "primaryLinks": {
+        "type": "array",
+        "required": true,
+        "description": "Primary navigation links",
+        "constraints": {
+          "minItems": 1,
+          "maxItems": 8
+        },
+        "itemShape": {
+          "label": "string",
+          "href": "string",
+          "icon": "string?"
+        }
+      }
+    },
+    "decisionSchema": {
+      "alignment": {
+        "type": "enum",
+        "options": ["left", "center", "right"],
+        "default": "left",
+        "ui": {
+          "control": "segmented",
+          "label": "Alignment",
+          "descriptions": {
+            "left": "Navigation items aligned to the left",
+            "center": "Navigation items centered",
+            "right": "Navigation items aligned to the right"
+          }
+        }
+      },
+      "density": {
+        "type": "enum",
+        "options": ["compact", "comfortable"],
+        "default": "comfortable",
+        "ui": {
+          "control": "toggle",
+          "label": "Density",
+          "descriptions": {
+            "compact": "Compact height and spacing",
+            "comfortable": "Comfortable spacing"
+          }
+        }
+      },
+      "background": {
+        "type": "enum",
+        "options": ["solid", "transparent", "blur"],
+        "default": "solid",
+        "ui": {
+          "control": "radio",
+          "label": "Background",
+          "descriptions": {
+            "solid": "Solid background with border/shadow",
+            "transparent": "Transparent background",
+            "blur": "Glass / backdrop blur"
+          }
+        }
+      }
+    }
+  },
+  "variants": [],
+  "metadata": {
+    "version": "2.0.0",
+    "author": "Sibtain",
+    "generatedAt": "2025-12-29T17:05:07.856Z",
+    "_note": "⚠️ AUTO-GENERATED. DO NOT EDIT. This file is generated from Navigation.meta.ts."
+  }
+}

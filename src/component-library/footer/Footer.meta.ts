@@ -1,0 +1,123 @@
+/**
+ * Footer Component Metadata
+ * ⚠️ SOURCE OF TRUTH
+ *
+ * - Edit this file only
+ * - Footer.catalog.json is auto-generated
+ * - Do NOT put runtime logic here
+ */
+
+export const FooterMeta = {
+  component: {
+    id: "footer",
+    name: "Footer",
+    category: "footer" as const,
+
+    description: "Simple site footer with optional links and copyright",
+
+    tags: ["footer", "links", "copyright", "responsive", "shadcn"],
+
+    intents: ["marketing", "portfolio", "product", "blog"] as const,
+
+    useCases: [
+      "Portfolio footer",
+      "Blog footer",
+      "Minimal site footer",
+      "Legal/copyright footer",
+    ],
+
+    baseCapabilities: {
+      responsive: true,
+      accessible: true,
+    },
+
+    dependencies: ["shadcn/ui", "tailwindcss"],
+
+    contentSchema: {
+      links: {
+        type: "array",
+        required: false,
+        description: "Simple footer navigation links",
+        constraints: {
+          maxItems: 8,
+        },
+        itemShape: {
+          name: "string",
+          href: "string",
+        },
+      },
+
+      copyright: {
+        type: "string",
+        required: false,
+        description: "Copyright text",
+      },
+    },
+
+    decisionSchema: {
+      alignment: {
+        type: "enum",
+        options: ["left", "center", "right"],
+        default: "left",
+        ui: {
+          control: "segmented",
+          label: "Alignment",
+          descriptions: {
+            left: "Content aligned to the left",
+            center: "Content centered",
+            right: "Content aligned to the right",
+          },
+        },
+      },
+
+      layout: {
+        type: "enum",
+        options: ["text", "links"],
+        default: "text",
+        ui: {
+          control: "radio",
+          label: "Layout",
+          descriptions: {
+            text: "Copyright-only footer — minimal legal line",
+            links: "Footer with navigation links + optional copyright",
+          },
+        },
+      },
+
+      density: {
+        type: "enum",
+        options: ["compact", "comfortable"],
+        default: "comfortable",
+        ui: {
+          control: "toggle",
+          label: "Density",
+          descriptions: {
+            compact: "Compact spacing and padding",
+            comfortable: "Comfortable spacing",
+          },
+        },
+      },
+
+      showCopyright: {
+        type: "boolean",
+        default: true,
+        ui: {
+          control: "toggle",
+          label: "Show Copyright",
+          descriptions: {
+            true: "Display copyright text",
+            false: "Hide copyright text",
+          },
+        },
+      },
+    },
+  },
+
+  variants: {} as const,
+
+  metadata: {
+    version: "1.0.0",
+    author: "Sibtain",
+    system: "decision-driven",
+  },
+} as const;
