@@ -181,7 +181,7 @@ export function SidebarFloatingExample() {
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
                 <a href="#">
-                  <Item className="p-0" size="xs">
+                  <Item className="p-0" size="default">
                     <ItemContent>
                       <ItemTitle className="text-sm">Documentation</ItemTitle>
                       <ItemDescription>v1.0.0</ItemDescription>
@@ -223,7 +223,7 @@ export function SidebarFloatingExample() {
         </SidebarContent>
         <SidebarFooter>
           <SidebarGroup>
-            <Card size="sm" className="-mx-2">
+            <Card className="-mx-2">
               <CardHeader>
                 <CardTitle className="text-sm">
                   Subscribe to our newsletter
@@ -260,7 +260,7 @@ export function SidebarFloatingExample() {
             <div className="bg-muted/50 aspect-video rounded-xl" />
             <div className="bg-muted/50 aspect-video rounded-xl" />
           </div>
-          <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
+          <div className="bg-muted/50 min-h-screen flex-1 rounded-xl md:min-h-min" />
         </div>
       </SidebarInset>
     </SidebarProvider>
