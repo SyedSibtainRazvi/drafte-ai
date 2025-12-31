@@ -4,8 +4,19 @@
     "name": "Footer",
     "category": "footer",
     "description": "Simple site footer with optional links and copyright",
-    "tags": ["footer", "links", "copyright", "responsive", "shadcn"],
-    "intents": ["marketing", "portfolio", "product", "blog"],
+    "tags": [
+      "footer",
+      "links",
+      "copyright",
+      "responsive",
+      "shadcn"
+    ],
+    "intents": [
+      "marketing",
+      "portfolio",
+      "product",
+      "blog"
+    ],
     "useCases": [
       "Portfolio footer",
       "Blog footer",
@@ -16,7 +27,10 @@
       "responsive": true,
       "accessible": true
     },
-    "dependencies": ["shadcn/ui", "tailwindcss"],
+    "dependencies": [
+      "shadcn/ui",
+      "tailwindcss"
+    ],
     "contentSchema": {
       "links": {
         "type": "array",
@@ -39,7 +53,11 @@
     "decisionSchema": {
       "alignment": {
         "type": "enum",
-        "options": ["left", "center", "right"],
+        "options": [
+          "left",
+          "center",
+          "right"
+        ],
         "default": "left",
         "ui": {
           "control": "segmented",
@@ -53,7 +71,10 @@
       },
       "layout": {
         "type": "enum",
-        "options": ["text", "links"],
+        "options": [
+          "text",
+          "links"
+        ],
         "default": "text",
         "ui": {
           "control": "radio",
@@ -66,7 +87,10 @@
       },
       "density": {
         "type": "enum",
-        "options": ["compact", "comfortable"],
+        "options": [
+          "compact",
+          "comfortable"
+        ],
         "default": "comfortable",
         "ui": {
           "control": "toggle",
@@ -95,7 +119,8 @@
   "metadata": {
     "version": "1.0.0",
     "author": "Sibtain",
-    "generatedAt": "2025-12-29T17:05:07.849Z",
+    "system": "decision-driven",
+    "generatedAt": "2025-12-31T13:07:37.588Z",
     "_note": "⚠️ AUTO-GENERATED. DO NOT EDIT. This file is generated from Footer.meta.ts."
   }
 }

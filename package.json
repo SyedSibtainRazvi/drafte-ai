@@ -10,7 +10,12 @@
     "format": "biome format --write",
     "format:check": "biome format",
     "postinstall": "prisma generate",
-    "migrate:deploy": "prisma migrate deploy"
+    "migrate:deploy": "prisma migrate deploy",
+    "generate:catalogs": "tsx scripts/generate-catalogs.ts",
+    "db:seed": "tsx scripts/seed.ts"
+  },
+  "prisma": {
+    "seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.36.2",
