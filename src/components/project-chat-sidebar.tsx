@@ -14,6 +14,7 @@ import {
 import { ModeToggle } from "@/components/ui/theme-toggle";
 import type { Project } from "@/generated/prisma/client";
 import logo from "../../public/drafte.svg";
+import { ProjectChat } from "./project-chat";
 
 interface ProjectChatSidebarProps {
   project: Project;
@@ -37,6 +38,7 @@ export function ProjectChatSidebar({ project }: ProjectChatSidebarProps) {
                   />
                 </div>
               </SidebarMenuButton>
+              <ProjectChat projectId={project.id} />
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
