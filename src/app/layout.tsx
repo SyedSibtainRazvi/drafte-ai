@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Montserrat } from "next/font/google";
 import { ClerkThemeProvider } from "@/components/clerk-theme-provider";
-import { Header } from "@/components/header";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import "./globals.css";
 
@@ -41,10 +40,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ClerkThemeProvider>
-            <Header />
-            {children}
-          </ClerkThemeProvider>
+          <ClerkThemeProvider>{children}</ClerkThemeProvider>
         </ThemeProvider>
       </body>
     </html>
