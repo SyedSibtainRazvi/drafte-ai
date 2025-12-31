@@ -64,6 +64,8 @@ export async function POST(req: Request) {
           input,
           status: "STREAMING",
           history: conversationHistory,
+          discovery: null,
+          selectedSkill: null,
         };
 
         await workflow.invoke(initialState, {
