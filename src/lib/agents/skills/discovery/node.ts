@@ -32,7 +32,7 @@ export async function discoveryNode(
   // This allows us to use discriminated unions in validation
   const llm = new ChatOpenAI({
     modelName: "gpt-4o-mini",
-    temperature: 0,
+    temperature: 0.0,
     modelKwargs: {
       response_format: { type: "json_object" },
     },
