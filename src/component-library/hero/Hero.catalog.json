@@ -15,7 +15,11 @@
       "shadcn",
       "interactive"
     ],
-    "intents": ["portfolio", "marketing", "product"],
+    "intents": [
+      "portfolio",
+      "marketing",
+      "product"
+    ],
     "useCases": [
       "Portfolio introduction",
       "Landing page hero",
@@ -29,7 +33,11 @@
       "supportsVisuals": true,
       "supportsHoverEffects": true
     },
-    "dependencies": ["shadcn/ui", "tailwindcss", "lucide-react"],
+    "dependencies": [
+      "shadcn/ui",
+      "tailwindcss",
+      "lucide-react"
+    ],
     "contentSchema": {
       "title": {
         "type": "string",
@@ -60,7 +68,11 @@
     "decisionSchema": {
       "alignment": {
         "type": "enum",
-        "options": ["left", "center", "right"],
+        "options": [
+          "left",
+          "center",
+          "right"
+        ],
         "default": "center",
         "ui": {
           "control": "segmented",
@@ -74,7 +86,10 @@
       },
       "layout": {
         "type": "enum",
-        "options": ["text-only", "split"],
+        "options": [
+          "text-only",
+          "split"
+        ],
         "default": "text-only",
         "ui": {
           "control": "radio",
@@ -87,7 +102,10 @@
       },
       "density": {
         "type": "enum",
-        "options": ["compact", "comfortable"],
+        "options": [
+          "compact",
+          "comfortable"
+        ],
         "default": "comfortable",
         "ui": {
           "control": "toggle",
@@ -100,7 +118,11 @@
       },
       "cta": {
         "type": "enum",
-        "options": ["none", "single", "dual"],
+        "options": [
+          "none",
+          "single",
+          "dual"
+        ],
         "default": "single",
         "ui": {
           "control": "radio",
@@ -114,7 +136,10 @@
       },
       "background": {
         "type": "enum",
-        "options": ["solid", "transparent"],
+        "options": [
+          "solid",
+          "transparent"
+        ],
         "default": "solid",
         "ui": {
           "control": "radio",
@@ -131,7 +156,9 @@
   "metadata": {
     "version": "2.1.0",
     "author": "Sibtain",
-    "generatedAt": "2025-12-29T17:05:07.853Z",
+    "system": "decision-driven",
+    "lastUpdated": "2025-01-25",
+    "generatedAt": "2025-12-31T13:07:37.592Z",
     "_note": "⚠️ AUTO-GENERATED. DO NOT EDIT. This file is generated from Hero.meta.ts."
   }
 }
