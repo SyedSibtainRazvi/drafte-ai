@@ -27,7 +27,7 @@ model Component {
 }
 
 model Project {
-  id                    String             @id @db.Uuid
+  id                    String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId                String
   name                  String?
   description           String?
