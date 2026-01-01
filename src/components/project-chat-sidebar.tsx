@@ -4,10 +4,10 @@ import { UserButton } from "@clerk/nextjs";
 import Image from "next/image";
 import {
   Sidebar,
+  SidebarContent,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
@@ -26,22 +26,20 @@ export function ProjectChatSidebar({ project }: ProjectChatSidebarProps) {
       <Sidebar variant="floating">
         <SidebarHeader>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild>
-                <div className="flex items-center">
-                  <Image
-                    src={logo}
-                    alt="Drafte"
-                    width={80}
-                    height={80}
-                    priority={true}
-                  />
-                </div>
-              </SidebarMenuButton>
-              <ProjectChat projectId={project.id} />
+            <SidebarMenuItem className="p-2 flex items-center justify-start">
+              <Image
+                src={logo}
+                alt="Drafte"
+                width={80}
+                height={80}
+                priority={true}
+              />
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
+        <SidebarContent className="flex-1 overflow-hidden px-2 pb-2">
+          <ProjectChat projectId={project.id} />
+        </SidebarContent>
       </Sidebar>
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 px-4">
