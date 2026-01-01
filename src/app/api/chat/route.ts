@@ -6,7 +6,6 @@ import { createWorkflow } from "@/lib/agents/graph";
 import type { DiscoveryOutput } from "@/lib/agents/skills/discovery/schema";
 import type { ProjectState } from "@/lib/agents/state";
 import { prisma } from "@/lib/prisma";
-import { resolutionService } from "@/lib/resolution-service";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -104,30 +103,30 @@ export async function POST(req: Request) {
             JSON.stringify(finalState.discovery),
           );
 
+          // Build resolution spec from discovery components
+          const resolutionSpec = {
+            version: "v2",
+            resolvedAt: new Date().toISOString(),
+            components: finalState.discovery.components.map((c) => ({
+              componentKey: c.type, // Map 'navigation' -> 'navigation', etc.
+              decisions: c.proposal,
+            })),
+          };
+
           await prisma.project.update({
             where: { id: runId },
             data: {
-              prompt: input.trim(), // Update the main project prompt with the discovery-triggering input
+              prompt: input.trim(),
               intentSpec: intentSpecData,
               intentSpecVersion: "discovery_v2",
+              resolutionSpec: resolutionSpec,
+              resolutionSpecVersion: "v2",
               status: "DISCOVERED",
               updatedAt: new Date(),
             },
           });
 
-          // Create resolution spec using the service
-          const resolutionResult = await resolutionService.createResolutionSpec(
-            runId,
-            finalState.discovery,
-          );
-
-          if (!resolutionResult.success) {
-            console.error(
-              `[API] Resolution spec creation failed: ${resolutionResult.message}`,
-            );
-            // Continue with the request even if resolution fails
-            // The discovery data is still saved in intentSpec
-          }
+          console.log(`[API] Discovery complete for project ${runId}.`);
 
           // Special event for the frontend to update its local state/preview
           if (finalState.selectedSkill === "discovery") {
@@ -138,7 +137,13 @@ export async function POST(req: Request) {
 
             if (!assistantText) {
               assistantText =
-                "I've analyzed your requirements and created a plan! You can see the components in the preview area.";
+                "Thank you for your input! I've analyzed your requirements and created a discovery plan for your project. You can now review and choose your preferred components in the preview area.";
+
+              // Stream the fallback message to the frontend
+              send({
+                type: "chat_token",
+                value: assistantText,
+              });
             }
           }
         }

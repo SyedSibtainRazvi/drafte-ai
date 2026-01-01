@@ -2,6 +2,8 @@
 
 import { UserButton } from "@clerk/nextjs";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,14 +15,31 @@ import {
 } from "@/components/ui/sidebar";
 import { ModeToggle } from "@/components/ui/theme-toggle";
 import type { Project } from "@/generated/prisma/client";
+import type { DiscoveryOutput } from "@/lib/agents/skills/discovery/schema";
 import logo from "../../public/drafte.svg";
 import { ProjectChat } from "./project-chat";
+import { ProjectPreviewPanel } from "./project-preview-panel";
 
 interface ProjectChatSidebarProps {
   project: Project;
 }
 
 export function ProjectChatSidebar({ project }: ProjectChatSidebarProps) {
+  const router = useRouter();
+  const [localDiscovery, setLocalDiscovery] = useState<DiscoveryOutput | null>(
+    null,
+  );
+
+  const discovery =
+    localDiscovery ||
+    (project.intentSpec as unknown as DiscoveryOutput) ||
+    null;
+
+  const handleDiscoveryDone = (discoveryData: DiscoveryOutput) => {
+    setLocalDiscovery(discoveryData);
+    router.refresh(); // Trigger server data refresh to get resolutionSpec
+  };
+
   return (
     <>
       <Sidebar variant="floating">
@@ -38,7 +57,10 @@ export function ProjectChatSidebar({ project }: ProjectChatSidebarProps) {
           </SidebarMenu>
         </SidebarHeader>
         <SidebarContent className="flex-1 overflow-hidden px-2 pb-2">
-          <ProjectChat projectId={project.id} />
+          <ProjectChat
+            projectId={project.id}
+            onDiscoveryDone={handleDiscoveryDone}
+          />
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
@@ -50,16 +72,7 @@ export function ProjectChatSidebar({ project }: ProjectChatSidebarProps) {
             <ModeToggle />
           </nav>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-2 pt-0">
-          <div className="bg-muted/50 min-h-[60vh] flex-1 rounded-md flex items-center justify-center text-muted-foreground md:min-h-min border">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold mb-2">
-                Project Preview {project.name}
-              </h2>
-              <p>This is where your generated components will be displayed</p>
-            </div>
-          </div>
-        </div>
+        <ProjectPreviewPanel project={project} discovery={discovery} />
       </SidebarInset>
     </>
   );

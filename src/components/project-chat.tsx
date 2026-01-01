@@ -19,6 +19,7 @@ import {
   PromptInputActions,
   PromptInputTextarea,
 } from "@/components/ui/prompt-input";
+import type { DiscoveryOutput } from "@/lib/agents/skills/discovery/schema";
 import { cn } from "@/lib/utils";
 
 type Message = {
@@ -26,7 +27,12 @@ type Message = {
   content: string;
 };
 
-export function ProjectChat({ projectId }: { projectId: string }) {
+interface ProjectChatProps {
+  projectId: string;
+  onDiscoveryDone?: (discovery: DiscoveryOutput) => void;
+}
+
+export function ProjectChat({ projectId, onDiscoveryDone }: ProjectChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -98,6 +104,11 @@ export function ProjectChat({ projectId }: { projectId: string }) {
                   };
                   return copy;
                 });
+              } else if (event.type === "discovery_done") {
+                // Notify parent component about discovery completion
+                if (onDiscoveryDone && event.value) {
+                  onDiscoveryDone(event.value);
+                }
               } else if (event.type === "chat_done") {
                 setLoading(false);
                 // If no chat tokens were received, fill with default message
@@ -130,7 +141,7 @@ export function ProjectChat({ projectId }: { projectId: string }) {
         setLoading(false);
       }
     },
-    [projectId],
+    [projectId, onDiscoveryDone],
   );
 
   async function sendMessage() {
