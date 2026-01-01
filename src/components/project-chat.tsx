@@ -21,12 +21,19 @@ import {
 } from "@/components/ui/prompt-input";
 import { cn } from "@/lib/utils";
 
+import type { DiscoveryOutput } from "@/lib/agents/skills/discovery/schema";
+
 type Message = {
   role: "user" | "assistant";
   content: string;
 };
 
-export function ProjectChat({ projectId }: { projectId: string }) {
+interface ProjectChatProps {
+  projectId: string;
+  onDiscoveryDone?: (discovery: DiscoveryOutput) => void;
+}
+
+export function ProjectChat({ projectId, onDiscoveryDone }: ProjectChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -94,6 +101,11 @@ export function ProjectChat({ projectId }: { projectId: string }) {
                   };
                   return copy;
                 });
+              } else if (event.type === "discovery_done") {
+                // Notify parent component about discovery completion
+                if (onDiscoveryDone && event.value) {
+                  onDiscoveryDone(event.value);
+                }
               } else if (event.type === "chat_done") {
                 setLoading(false);
               }
@@ -107,7 +119,7 @@ export function ProjectChat({ projectId }: { projectId: string }) {
         setLoading(false);
       }
     },
-    [projectId],
+    [projectId, onDiscoveryDone],
   );
 
   async function sendMessage() {
