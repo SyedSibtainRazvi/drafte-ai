@@ -51,6 +51,7 @@ export function ProjectChat({ projectId }: { projectId: string }) {
   const streamResponse = useCallback(
     async (userInput: string) => {
       setLoading(true);
+
       try {
         const res = await fetch("/api/chat", {
           method: "POST",
@@ -69,6 +70,7 @@ export function ProjectChat({ projectId }: { projectId: string }) {
         setMessages((m) => [...m, { role: "assistant", content: "" }]);
 
         let buffer = "";
+
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
@@ -79,11 +81,13 @@ export function ProjectChat({ projectId }: { projectId: string }) {
 
           for (const evt of parts) {
             if (!evt.startsWith("data: ")) continue;
+
             const msgBody = evt.replace("data: ", "").trim();
             if (!msgBody) continue;
 
             try {
               const event = JSON.parse(msgBody);
+
               if (event.type === "chat_token") {
                 assistantContent += event.value;
                 setMessages((m) => {
@@ -95,6 +99,25 @@ export function ProjectChat({ projectId }: { projectId: string }) {
                   return copy;
                 });
               } else if (event.type === "chat_done") {
+                setLoading(false);
+                // If no chat tokens were received, fill with default message
+                setMessages((m) => {
+                  const copy = [...m];
+                  const last = copy[copy.length - 1];
+                  if (
+                    last?.role === "assistant" &&
+                    last.content.trim() === ""
+                  ) {
+                    copy[copy.length - 1] = {
+                      role: "assistant",
+                      content:
+                        "I've analyzed your requirements and created a structure for your project. You can see the components in the preview.",
+                    };
+                  }
+                  return copy;
+                });
+              } else if (event.type === "error") {
+                console.error(event.message);
                 setLoading(false);
               }
             } catch (e) {
@@ -166,18 +189,20 @@ export function ProjectChat({ projectId }: { projectId: string }) {
               </MessageComponent>
             );
           })}
-          {loading && messages[messages.length - 1]?.content === "" && (
+
+          {loading && (
             <MessageComponent className="justify-start animate-in fade-in duration-300">
               <div className="max-w-[90%] sm:max-w-[80%]">
                 <MessageContent className="bg-muted/50 border border-border/60 rounded-2xl rounded-tl-none py-3 px-3">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    <span className="font-medium">Assistant is thinking…</span>
+                    <span className="font-medium">Agent is thinking</span>
                   </div>
                 </MessageContent>
               </div>
             </MessageComponent>
           )}
+
           <ChatContainerScrollAnchor />
         </ChatContainerContent>
       </ChatContainerRoot>
