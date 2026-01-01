@@ -188,13 +188,13 @@ export function ProjectChat({ projectId }: { projectId: string }) {
           onValueChange={setInput}
           onSubmit={sendMessage}
           isLoading={loading}
-          className="w-full bg-background border border-border/60 rounded-md shadow focus-within:ring-1 focus-within:ring-ring"
+          className="w-full bg-background border border-border/60 rounded-md shadow focus-within:ring-1 focus-within:ring-ring flex items-end pr-2"
         >
           <PromptInputTextarea
             placeholder="Ask something about your project…"
-            className="flex-1 text-xs bg-transparent dark:bg-transparent"
+            className="flex-1 text-xs bg-transparent dark:bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0"
           />
-          <PromptInputActions>
+          <PromptInputActions className="ml-2">
             <PromptInputAction tooltip="Send message">
               <Button
                 size="icon"
