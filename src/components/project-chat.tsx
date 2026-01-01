@@ -1,6 +1,25 @@
 "use client";
 
+import { Loader2, Send } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  ChatContainerContent,
+  ChatContainerRoot,
+  ChatContainerScrollAnchor,
+} from "@/components/ui/chat-container";
+import { Markdown } from "@/components/ui/markdown";
+import {
+  Message as MessageComponent,
+  MessageContent,
+} from "@/components/ui/message";
+import {
+  PromptInput,
+  PromptInputAction,
+  PromptInputActions,
+  PromptInputTextarea,
+} from "@/components/ui/prompt-input";
+import { cn } from "@/lib/utils";
 
 type Message = {
   role: "user" | "assistant";
@@ -11,16 +30,12 @@ export function ProjectChat({ projectId }: { projectId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function loadHistory() {
       const res = await fetch(`/api/chat/history?projectId=${projectId}`);
-
       if (!res.ok) return;
-
       const data: Message[] = await res.json();
-
       setMessages(
         data.map((m) => ({
           role: m.role,
@@ -28,13 +43,11 @@ export function ProjectChat({ projectId }: { projectId: string }) {
         })),
       );
     }
-
     loadHistory();
   }, [projectId]);
 
   const hasTriggeredRef = useRef(false);
 
-  // Reusable streaming function
   const streamResponse = useCallback(
     async (userInput: string) => {
       setLoading(true);
@@ -81,15 +94,8 @@ export function ProjectChat({ projectId }: { projectId: string }) {
                   };
                   return copy;
                 });
-              } else if (event.type === "discovery_done") {
-                // Handle discovery results (e.g. log them or update UI)
-                console.log("Discovery complete:", event.value);
-                // If there was no token stream, we'll get the fallback message
-                // from the chat history when things finish or from a final token.
               } else if (event.type === "chat_done") {
                 setLoading(false);
-                // Re-fetch history to get the finalized assistant message if needed
-                // or just rely on the stream.
               }
             } catch (e) {
               console.error("Failed to parse SSE", e);
@@ -113,7 +119,6 @@ export function ProjectChat({ projectId }: { projectId: string }) {
     await streamResponse(currentInput);
   }
 
-  // Auto-trigger if history only contains the initial prompt
   useEffect(() => {
     if (
       messages.length === 1 &&
@@ -126,48 +131,82 @@ export function ProjectChat({ projectId }: { projectId: string }) {
     }
   }, [messages, loading, streamResponse]);
 
-  // Auto-scroll to bottom
-  // biome-ignore lint/correctness/useExhaustiveDependencies: We need to trigger scroll when messages change
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
-
   return (
-    <div className="flex flex-col border rounded-md h-[400px]">
-      <div
-        ref={scrollRef}
-        id="chat-messages"
-        className="flex-1 overflow-auto p-3 space-y-2 text-sm"
-      >
-        {messages.map((m, i) => (
-          <div key={`${m.role}-${i}`}>
-            <strong className="capitalize">{m.role}:</strong> {m.content}
-          </div>
-        ))}
-        {loading && (
-          <div className="text-muted-foreground animate-pulse">
-            Assistant is thinking…
-          </div>
-        )}
-      </div>
+    <div className="flex flex-col bg-background/50 border border-border/60 rounded-xl overflow-hidden h-full w-full text-xs">
+      <ChatContainerRoot className="flex-1 px-4 py-4">
+        <ChatContainerContent className="space-y-4">
+          {messages.map((m, i) => {
+            const isAssistant = m.role === "assistant";
+            return (
+              <MessageComponent
+                key={`${m.role}-${i}`}
+                className={cn(
+                  "animate-in fade-in slide-in-from-bottom-2 duration-300",
+                  m.role === "user" ? "justify-end" : "justify-start",
+                )}
+              >
+                <div className="max-w-[90%] sm:max-w-[80%]">
+                  <MessageContent
+                    className={cn(
+                      "shadow-sm transition-all py-2 px-3",
+                      isAssistant
+                        ? "bg-muted/50 border border-border/60 rounded-2xl rounded-tl-none"
+                        : "bg-primary text-primary-foreground rounded-2xl rounded-br-none",
+                    )}
+                  >
+                    {isAssistant ? (
+                      <Markdown className="prose-xs">{m.content}</Markdown>
+                    ) : (
+                      <p className="whitespace-pre-wrap leading-relaxed">
+                        {m.content}
+                      </p>
+                    )}
+                  </MessageContent>
+                </div>
+              </MessageComponent>
+            );
+          })}
+          {loading && messages[messages.length - 1]?.content === "" && (
+            <MessageComponent className="justify-start animate-in fade-in duration-300">
+              <div className="max-w-[90%] sm:max-w-[80%]">
+                <MessageContent className="bg-muted/50 border border-border/60 rounded-2xl rounded-tl-none py-3 px-3">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span className="font-medium">Assistant is thinking…</span>
+                  </div>
+                </MessageContent>
+              </div>
+            </MessageComponent>
+          )}
+          <ChatContainerScrollAnchor />
+        </ChatContainerContent>
+      </ChatContainerRoot>
 
-      <div className="border-t p-2 flex gap-2">
-        <input
+      <div className="p-4 pt-0">
+        <PromptInput
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="flex-1 border rounded px-2 py-1"
-          placeholder="Ask something about your project…"
-        />
-        <button
-          type="button"
-          onClick={sendMessage}
-          disabled={loading}
-          className="border rounded px-3"
+          onValueChange={setInput}
+          onSubmit={sendMessage}
+          isLoading={loading}
+          className="w-full bg-background border border-border/60 rounded-md shadow focus-within:ring-1 focus-within:ring-ring"
         >
-          Send
-        </button>
+          <PromptInputTextarea
+            placeholder="Ask something about your project…"
+            className="flex-1 text-xs bg-transparent dark:bg-transparent"
+          />
+          <PromptInputActions>
+            <PromptInputAction tooltip="Send message">
+              <Button
+                size="icon"
+                onClick={sendMessage}
+                disabled={loading || !input.trim()}
+                className="h-7 w-7 rounded-full transition-all active:scale-95 shrink-0"
+              >
+                <Send className="h-3.5 w-3.5" />
+              </Button>
+            </PromptInputAction>
+          </PromptInputActions>
+        </PromptInput>
       </div>
     </div>
   );
