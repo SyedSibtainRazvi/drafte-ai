@@ -3,6 +3,7 @@ export const runtime = "nodejs";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { createWorkflow } from "@/lib/agents/graph";
+import type { DiscoveryOutput } from "@/lib/agents/skills/discovery/schema";
 import type { ProjectState } from "@/lib/agents/state";
 import { prisma } from "@/lib/prisma";
 
@@ -17,27 +18,36 @@ export async function POST(req: Request) {
   }
 
   // 1. Fetch latest history BEFORE saving the current message
-  // This ensures the current 'input' isn't duplicated in the prompt
   const historyFromDb = await prisma.chatMessage.findMany({
     where: { projectId: runId },
     orderBy: { createdAt: "desc" },
     take: HISTORY_LIMIT,
   });
 
+  // 2. Detect if this is an automated re-send of the initial prompt
+  // (Happens during the after-redirect auto-start)
+  const isDuplicateOfInitial =
+    historyFromDb.length > 0 &&
+    historyFromDb[0].role === "user" &&
+    historyFromDb[0].content === input;
+
+  if (!isDuplicateOfInitial) {
+    // ONLY save if it's a NEW message from the user
+    await prisma.chatMessage.create({
+      data: {
+        projectId: runId,
+        role: "user",
+        content: input,
+      },
+    });
+  }
+
   // Reverse to chronological order (asc) for the LLM
-  const conversationHistory = historyFromDb.reverse().map((m) => ({
+  // If it's a duplicate, we still want the history to look correct
+  const conversationHistory = [...historyFromDb].reverse().map((m) => ({
     role: m.role as "user" | "assistant",
     content: m.content,
   }));
-
-  // 2. NOW save the new message to DB
-  await prisma.chatMessage.create({
-    data: {
-      projectId: runId,
-      role: "user",
-      content: input,
-    },
-  });
 
   const workflow = await createWorkflow();
 
@@ -48,6 +58,7 @@ export async function POST(req: Request) {
       type ChatEvent =
         | { type: "chat_token"; value: string }
         | { type: "chat_done" }
+        | { type: "discovery_done"; value: DiscoveryOutput }
         | { type: "error"; message: string };
 
       const send = (event: ChatEvent) => {
@@ -68,7 +79,7 @@ export async function POST(req: Request) {
           selectedSkill: null,
         };
 
-        await workflow.invoke(initialState, {
+        const finalState = await workflow.invoke(initialState, {
           callbacks: [
             {
               handleLLMNewToken(token) {
@@ -81,6 +92,41 @@ export async function POST(req: Request) {
             },
           ],
         });
+
+        // 3. Handle Discovery Output
+        // Save intentSpec if the workflow generated or updated discovery data
+        if (finalState.discovery) {
+          console.log(`[API] Saving discovery intentSpec for project ${runId}`);
+
+          // Serialize for Prisma Json field
+          const intentSpecData = JSON.parse(
+            JSON.stringify(finalState.discovery),
+          );
+
+          await prisma.project.update({
+            where: { id: runId },
+            data: {
+              prompt: input.trim(), // Update the main project prompt with the discovery-triggering input
+              intentSpec: intentSpecData,
+              intentSpecVersion: "discovery_v2",
+              status: "DISCOVERED",
+              updatedAt: new Date(),
+            },
+          });
+
+          // Special event for the frontend to update its local state/preview
+          if (finalState.selectedSkill === "discovery") {
+            send({
+              type: "discovery_done",
+              value: finalState.discovery,
+            });
+
+            if (!assistantText) {
+              assistantText =
+                "I've analyzed your requirements and created a plan! You can see the components in the preview area.";
+            }
+          }
+        }
 
         await prisma.chatMessage.create({
           data: {
