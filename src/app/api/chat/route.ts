@@ -6,7 +6,6 @@ import { createWorkflow } from "@/lib/agents/graph";
 import type { DiscoveryOutput } from "@/lib/agents/skills/discovery/schema";
 import type { ProjectState } from "@/lib/agents/state";
 import { prisma } from "@/lib/prisma";
-import { resolutionService } from "@/lib/resolution-service";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -127,19 +126,7 @@ export async function POST(req: Request) {
             },
           });
 
-          // Create resolution spec using the service
-          const resolutionResult = await resolutionService.createResolutionSpec(
-            runId,
-            finalState.discovery,
-          );
-
-          if (!resolutionResult.success) {
-            console.error(
-              `[API] Resolution spec creation failed: ${resolutionResult.message}`,
-            );
-            // Continue with the request even if resolution fails
-            // The discovery data is still saved in intentSpec
-          }
+          console.log(`[API] Discovery complete for project ${runId}.`);
 
           // Special event for the frontend to update its local state/preview
           if (finalState.selectedSkill === "discovery") {
