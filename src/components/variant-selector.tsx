@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Loader2, Sparkles } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import Footer from "@/component-library/footer/Footer";
 import Hero from "@/component-library/hero/Hero";
@@ -65,7 +66,7 @@ function ComponentRenderer({
   component: ComponentVariants;
   variant: ComponentVariant;
 }) {
-  const handleNavigate = (link: any) => {
+  const handleNavigate = (link: unknown) => {
     console.log("Navigation:", link);
   };
 
@@ -121,7 +122,13 @@ export function VariantSelector({
   projectId,
   components,
 }: VariantSelectorProps) {
-  const [currentComponentIndex, setCurrentComponentIndex] = useState(0);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Derive index from URL (?step=0)
+  const stepParam = searchParams.get("step");
+  const currentComponentIndex = stepParam ? parseInt(stepParam, 10) : 0;
+
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -130,6 +137,12 @@ export function VariantSelector({
   >(() => Object.fromEntries(components.map((c) => [c.key, 0])));
 
   const currentComponent = components[currentComponentIndex];
+
+  const updateStep = (newIndex: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("step", newIndex.toString());
+    router.push(`?${params.toString()}`);
+  };
 
   const handleVariantSelect = (componentKey: string, variantIndex: number) => {
     setSelectedVariants((prev) => ({
@@ -140,13 +153,13 @@ export function VariantSelector({
 
   const handleNext = () => {
     if (currentComponentIndex < components.length - 1) {
-      setCurrentComponentIndex(currentComponentIndex + 1);
+      updateStep(currentComponentIndex + 1);
     }
   };
 
   const handlePrevious = () => {
     if (currentComponentIndex > 0) {
-      setCurrentComponentIndex(currentComponentIndex - 1);
+      updateStep(currentComponentIndex - 1);
     }
   };
 
@@ -174,10 +187,10 @@ export function VariantSelector({
         throw new Error("Failed to save components");
       }
 
-      // Success! You might want to redirect or show a success state here
+      // Success! Clear search params and show new state
       console.log("Components saved successfully!");
-      // For now, let's just refresh to show the updated status if needed
-      window.location.reload();
+      router.push(`/projects/${projectId}`);
+      router.refresh();
     } catch (err) {
       console.error(err);
       setSaveError("An error occurred while saving. Please try again.");
@@ -215,11 +228,11 @@ export function VariantSelector({
             const isSelected = selectedVariants[currentComponent.key] === index;
 
             return (
-              <div
-                key={index}
-                onClick={() => handleVariantSelect(currentComponent.key, index)}
+              <label
+                key={`${currentComponent.key}-${variant.label}`}
                 className={`
-                  border-2 rounded-lg p-4 cursor-pointer transition-all w-full
+                  relative border-2 rounded-lg p-4 cursor-pointer transition-all w-full block
+                  focus-within:outline-none focus-within:ring-2 focus-within:ring-emerald-500
                   ${
                     isSelected
                       ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-md"
@@ -227,6 +240,17 @@ export function VariantSelector({
                   }
                 `}
               >
+                <input
+                  type="radio"
+                  name={`variant-${currentComponent.key}`}
+                  value={index}
+                  checked={isSelected}
+                  onChange={() =>
+                    handleVariantSelect(currentComponent.key, index)
+                  }
+                  className="sr-only"
+                  aria-label={`Select ${variant.label}`}
+                />
                 {/* Variant Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
@@ -259,13 +283,13 @@ export function VariantSelector({
                 </div>
 
                 {/* Live Component Preview - Forced Full Width */}
-                <div className="relative w-full overflow-x-hidden">
+                <div className="relative w-full overflow-x-hidden pointer-events-none">
                   <ComponentRenderer
                     component={currentComponent}
                     variant={variant}
                   />
                 </div>
-              </div>
+              </label>
             );
           })}
         </div>

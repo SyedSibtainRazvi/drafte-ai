@@ -119,7 +119,7 @@ export async function POST(req: Request) {
               prompt: input.trim(),
               intentSpec: intentSpecData,
               intentSpecVersion: "discovery_v2",
-              resolutionSpec: resolutionSpec as any,
+              resolutionSpec: resolutionSpec,
               resolutionSpecVersion: "v2",
               status: "DISCOVERED",
               updatedAt: new Date(),

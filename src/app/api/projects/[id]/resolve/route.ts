@@ -1,5 +1,4 @@
 import { auth } from "@clerk/nextjs/server";
-import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
