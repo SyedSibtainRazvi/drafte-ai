@@ -1,18 +1,18 @@
 "use client";
 
+import { ChevronLeft, ChevronRight, Loader2, Sparkles } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import type {
-  NavigationDecisions,
-  HeroDecisions,
-  FooterDecisions,
-} from "@/lib/derive-variations";
+import Footer from "@/component-library/footer/Footer";
+import Hero from "@/component-library/hero/Hero";
 
 // Import actual components
 import Navigation from "@/component-library/navigation/Navigation";
-import Hero from "@/component-library/hero/Hero";
-import Footer from "@/component-library/footer/Footer";
+import { Button } from "@/components/ui/button";
+import type {
+  FooterDecisions,
+  HeroDecisions,
+  NavigationDecisions,
+} from "@/lib/derive-variations";
 
 export interface ComponentVariant {
   label: string;
@@ -36,13 +36,14 @@ interface VariantSelectorProps {
 const SAMPLE_NAVIGATION_LINKS = [
   { id: "home", label: "Home", href: "#home" },
   { id: "about", label: "About", href: "#about" },
-  { id: "services", label: "Services", href: "#services", icon: "Briefcase" },
+  { id: "services", label: "Services", href: "#services" },
   { id: "contact", label: "Contact", href: "#contact" },
 ];
 
 const SAMPLE_HERO_CONTENT = {
   title: "Build Something Amazing",
-  subtitle: "Create stunning web experiences with our component library and AI-powered design system.",
+  subtitle:
+    "Create stunning web experiences with our component library and AI-powered design system.",
   image: "/api/placeholder/600/400",
   ctaPrimary: "Get Started",
   ctaSecondary: "Learn More",
@@ -121,9 +122,12 @@ export function VariantSelector({
   components,
 }: VariantSelectorProps) {
   const [currentComponentIndex, setCurrentComponentIndex] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   const [selectedVariants, setSelectedVariants] = useState<
     Record<string, number>
-  >({});
+  >(() => Object.fromEntries(components.map((c) => [c.key, 0])));
 
   const currentComponent = components[currentComponentIndex];
 
@@ -147,9 +151,39 @@ export function VariantSelector({
   };
 
   const handleComplete = async () => {
-    // TODO: Save selected variants to project
-    console.log("Selected variants:", selectedVariants);
-    // You can add API call here to save selections
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      const selections = components.map((comp) => {
+        const variantIndex = selectedVariants[comp.key] ?? 0;
+        const variant = comp.variants[variantIndex];
+        return {
+          key: comp.key,
+          decisions: variant.decisions,
+        };
+      });
+
+      const res = await fetch(`/api/projects/${projectId}/resolve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selections }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to save components");
+      }
+
+      // Success! You might want to redirect or show a success state here
+      console.log("Components saved successfully!");
+      // For now, let's just refresh to show the updated status if needed
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      setSaveError("An error occurred while saving. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!currentComponent) {
@@ -165,12 +199,9 @@ export function VariantSelector({
       {/* Component Header */}
       <div className="border-b p-4 flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold capitalize">
+          <h2 className="text-xl font-bold capitalize tracking-tight">
             {currentComponent.name}
           </h2>
-          <p className="text-sm text-muted-foreground">
-            {currentComponent.purpose}
-          </p>
         </div>
         <div className="text-sm text-muted-foreground">
           {currentComponentIndex + 1} of {components.length}
@@ -179,62 +210,61 @@ export function VariantSelector({
 
       {/* Variants Display Area - All 3 in vertical stack */}
       <div className="flex-1 p-6 overflow-y-auto">
-        <div className="flex flex-col gap-6 max-w-4xl mx-auto">
+        <div className="flex flex-col gap-8 w-full">
           {currentComponent.variants.map((variant, index) => {
-            const isSelected =
-              selectedVariants[currentComponent.key] === index;
+            const isSelected = selectedVariants[currentComponent.key] === index;
 
             return (
               <div
                 key={index}
-                onClick={() =>
-                  handleVariantSelect(currentComponent.key, index)
-                }
+                onClick={() => handleVariantSelect(currentComponent.key, index)}
                 className={`
-                  border-2 rounded-lg p-4 cursor-pointer transition-all
-                  ${isSelected
-                    ? "border-primary bg-primary/5 shadow-md"
-                    : "border-border hover:border-primary/50 hover:shadow-sm"
+                  border-2 rounded-lg p-4 cursor-pointer transition-all w-full
+                  ${
+                    isSelected
+                      ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-md"
+                      : "border-border hover:border-emerald-500/50 hover:shadow-sm"
                   }
                 `}
               >
                 {/* Variant Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-medium">
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="text-base font-semibold text-foreground">
                         {variant.label}
                       </h3>
-                      {isSelected && (
-                        <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-                          Selected
+                      {index === 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300 text-[10px] font-medium uppercase tracking-wider border border-violet-200 dark:border-violet-800">
+                          <Sparkles className="w-3 h-3" />
+                          AI Recommended
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {variant.description}
-                    </p>
                   </div>
                   <div
                     className={`
-                      w-5 h-5 rounded-full border-2 flex items-center justify-center
-                      ${isSelected
-                        ? "border-primary bg-primary"
-                        : "border-muted-foreground/30"
+                      w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ml-4
+                      ${
+                        isSelected
+                          ? "border-emerald-500 bg-emerald-500 text-white"
+                          : "border-muted-foreground/30 bg-transparent"
                       }
                     `}
                   >
                     {isSelected && (
-                      <div className="w-2 h-2 bg-primary-foreground rounded-full" />
+                      <div className="w-2.5 h-2.5 bg-current rounded-full" />
                     )}
                   </div>
                 </div>
 
-                {/* Live Component Preview */}
-                <ComponentRenderer
-                  component={currentComponent}
-                  variant={variant}
-                />
+                {/* Live Component Preview - Forced Full Width */}
+                <div className="relative w-full overflow-x-hidden">
+                  <ComponentRenderer
+                    component={currentComponent}
+                    variant={variant}
+                  />
+                </div>
               </div>
             );
           })}
@@ -253,9 +283,24 @@ export function VariantSelector({
         </Button>
 
         {currentComponentIndex === components.length - 1 ? (
-          <Button onClick={handleComplete} className="px-6">
-            Complete Selection
-          </Button>
+          <div className="flex flex-col items-end gap-2">
+            <Button
+              onClick={handleComplete}
+              className="px-6 relative"
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Complete Selection"
+              )}
+            </Button>
+            {saveError && (
+              <span className="text-xs text-destructive font-medium">
+                {saveError}
+              </span>
+            )}
+          </div>
         ) : (
           <Button onClick={handleNext} className="px-6">
             Next

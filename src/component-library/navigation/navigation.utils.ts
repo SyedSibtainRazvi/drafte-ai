@@ -6,7 +6,7 @@ export function containerClasses(
 ) {
   return cn(
     "relative w-full",
-    background === "solid" && "bg-background border-b",
+    background === "solid" && "bg-background",
     background === "transparent" && "bg-transparent",
     background === "blur" && "bg-transparent",
   );

@@ -36,7 +36,7 @@ export function deriveFooterVariations(
   variations.push({
     decisions: base,
     label: "Discovery Recommended",
-    description: "AI-recommended footer configuration",
+    description: "",
   });
 
   /* ────────────────────────────────────────────────

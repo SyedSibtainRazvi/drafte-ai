@@ -103,12 +103,24 @@ export async function POST(req: Request) {
             JSON.stringify(finalState.discovery),
           );
 
+          // Build resolution spec from discovery components
+          const resolutionSpec = {
+            version: "v2",
+            resolvedAt: new Date().toISOString(),
+            components: finalState.discovery.components.map((c) => ({
+              componentKey: c.type, // Map 'navigation' -> 'navigation', etc.
+              decisions: c.proposal,
+            })),
+          };
+
           await prisma.project.update({
             where: { id: runId },
             data: {
-              prompt: input.trim(), // Update the main project prompt with the discovery-triggering input
+              prompt: input.trim(),
               intentSpec: intentSpecData,
               intentSpecVersion: "discovery_v2",
+              resolutionSpec: resolutionSpec as any,
+              resolutionSpecVersion: "v2",
               status: "DISCOVERED",
               updatedAt: new Date(),
             },
@@ -123,7 +135,13 @@ export async function POST(req: Request) {
 
             if (!assistantText) {
               assistantText =
-                "I've analyzed your requirements and created a plan! You can see the components in the preview area.";
+                "Thank you for your input! I've analyzed your requirements and created a discovery plan for your project. You can now review and choose your preferred components in the preview area.";
+
+              // Stream the fallback message to the frontend
+              send({
+                type: "chat_token",
+                value: assistantText,
+              });
             }
           }
         }

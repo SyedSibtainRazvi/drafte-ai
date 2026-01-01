@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { UserButton } from "@clerk/nextjs";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -17,9 +18,9 @@ import { ModeToggle } from "@/components/ui/theme-toggle";
 import type { Project } from "@/generated/prisma/client";
 import type { DiscoveryOutput } from "@/lib/agents/skills/discovery/schema";
 import {
-  deriveNavigationVariations,
-  deriveHeroVariations,
   deriveFooterVariations,
+  deriveHeroVariations,
+  deriveNavigationVariations,
 } from "@/lib/derive-variations";
 import logo from "../../public/drafte.svg";
 import { ProjectChat } from "./project-chat";
@@ -33,10 +34,11 @@ interface ResolutionSpec {
     decisions: Record<string, unknown>;
   }>;
 }
+
 import type {
-  NavigationDecisions,
-  HeroDecisions,
   FooterDecisions,
+  HeroDecisions,
+  NavigationDecisions,
 } from "@/lib/derive-variations";
 
 interface ComponentVariant {
@@ -57,13 +59,24 @@ interface ProjectChatSidebarProps {
 }
 
 export function ProjectChatSidebar({ project }: ProjectChatSidebarProps) {
-  const [discovery, setDiscovery] = useState<DiscoveryOutput | null>(null);
-  const [canReviewComponents, setCanReviewComponents] = useState(false);
+  const router = useRouter();
+  const [localDiscovery, setLocalDiscovery] = useState<DiscoveryOutput | null>(
+    null,
+  );
+
+  const discovery =
+    localDiscovery ||
+    (project.intentSpec as unknown as DiscoveryOutput) ||
+    null;
+
+  // Enable review if discovery and resolution are present
+  const canReviewComponents = !!discovery && !!project.resolutionSpec;
+
   const [showResolution, setShowResolution] = useState(false);
 
   const handleDiscoveryDone = (discoveryData: DiscoveryOutput) => {
-    setDiscovery(discoveryData);
-    setCanReviewComponents(true);
+    setLocalDiscovery(discoveryData);
+    router.refresh(); // Trigger server data refresh to get resolutionSpec
   };
 
   // Prepare component variants data for VariantSelector
@@ -144,7 +157,10 @@ export function ProjectChatSidebar({ project }: ProjectChatSidebarProps) {
           </SidebarMenu>
         </SidebarHeader>
         <SidebarContent className="flex-1 overflow-hidden px-2 pb-2">
-          <ProjectChat projectId={project.id} onDiscoveryDone={handleDiscoveryDone} />
+          <ProjectChat
+            projectId={project.id}
+            onDiscoveryDone={handleDiscoveryDone}
+          />
         </SidebarContent>
       </Sidebar>
       <SidebarInset>
@@ -156,7 +172,7 @@ export function ProjectChatSidebar({ project }: ProjectChatSidebarProps) {
             <ModeToggle />
           </nav>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-2 pt-0">
+        <div className="flex h-[calc(100vh-4rem)] flex-col gap-4 p-2 pt-0 overflow-hidden min-h-0">
           {showResolution ? (
             <VariantSelector
               projectId={project.id}

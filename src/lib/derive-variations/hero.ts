@@ -38,7 +38,7 @@ export function deriveHeroVariations(base: HeroDecisions): HeroVariation[] {
   variations.push({
     decisions: base,
     label: "Discovery Recommended",
-    description: "AI-recommended hero configuration",
+    description: "",
   });
 
   /* ────────────────────────────────────────────────

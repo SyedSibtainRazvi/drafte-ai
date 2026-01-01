@@ -19,9 +19,8 @@ import {
   PromptInputActions,
   PromptInputTextarea,
 } from "@/components/ui/prompt-input";
-import { cn } from "@/lib/utils";
-
 import type { DiscoveryOutput } from "@/lib/agents/skills/discovery/schema";
+import { cn } from "@/lib/utils";
 
 type Message = {
   role: "user" | "assistant";
@@ -178,13 +177,13 @@ export function ProjectChat({ projectId, onDiscoveryDone }: ProjectChatProps) {
               </MessageComponent>
             );
           })}
-          {loading && messages[messages.length - 1]?.content === "" && (
+          {loading && (
             <MessageComponent className="justify-start animate-in fade-in duration-300">
               <div className="max-w-[90%] sm:max-w-[80%]">
                 <MessageContent className="bg-muted/50 border border-border/60 rounded-2xl rounded-tl-none py-3 px-3">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    <span className="font-medium">Assistant is thinking…</span>
+                    <span className="font-medium">Agent is thinking</span>
                   </div>
                 </MessageContent>
               </div>

@@ -37,7 +37,7 @@ export function deriveNavigationVariations(
   variations.push({
     decisions: base,
     label: "Discovery Recommended",
-    description: "AI-recommended navigation layout",
+    description: "",
   });
 
   /* ────────────────────────────────────────────────
