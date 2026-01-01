@@ -57,6 +57,7 @@ export function ProjectChat({ projectId, onDiscoveryDone }: ProjectChatProps) {
   const streamResponse = useCallback(
     async (userInput: string) => {
       setLoading(true);
+
       try {
         const res = await fetch("/api/chat", {
           method: "POST",
@@ -75,6 +76,7 @@ export function ProjectChat({ projectId, onDiscoveryDone }: ProjectChatProps) {
         setMessages((m) => [...m, { role: "assistant", content: "" }]);
 
         let buffer = "";
+
         while (true) {
           const { value, done } = await reader.read();
           if (done) break;
@@ -85,11 +87,13 @@ export function ProjectChat({ projectId, onDiscoveryDone }: ProjectChatProps) {
 
           for (const evt of parts) {
             if (!evt.startsWith("data: ")) continue;
+
             const msgBody = evt.replace("data: ", "").trim();
             if (!msgBody) continue;
 
             try {
               const event = JSON.parse(msgBody);
+
               if (event.type === "chat_token") {
                 assistantContent += event.value;
                 setMessages((m) => {
@@ -106,6 +110,25 @@ export function ProjectChat({ projectId, onDiscoveryDone }: ProjectChatProps) {
                   onDiscoveryDone(event.value);
                 }
               } else if (event.type === "chat_done") {
+                setLoading(false);
+                // If no chat tokens were received, fill with default message
+                setMessages((m) => {
+                  const copy = [...m];
+                  const last = copy[copy.length - 1];
+                  if (
+                    last?.role === "assistant" &&
+                    last.content.trim() === ""
+                  ) {
+                    copy[copy.length - 1] = {
+                      role: "assistant",
+                      content:
+                        "I've analyzed your requirements and created a structure for your project. You can see the components in the preview.",
+                    };
+                  }
+                  return copy;
+                });
+              } else if (event.type === "error") {
+                console.error(event.message);
                 setLoading(false);
               }
             } catch (e) {
@@ -177,6 +200,7 @@ export function ProjectChat({ projectId, onDiscoveryDone }: ProjectChatProps) {
               </MessageComponent>
             );
           })}
+
           {loading && (
             <MessageComponent className="justify-start animate-in fade-in duration-300">
               <div className="max-w-[90%] sm:max-w-[80%]">
@@ -189,6 +213,7 @@ export function ProjectChat({ projectId, onDiscoveryDone }: ProjectChatProps) {
               </div>
             </MessageComponent>
           )}
+
           <ChatContainerScrollAnchor />
         </ChatContainerContent>
       </ChatContainerRoot>
