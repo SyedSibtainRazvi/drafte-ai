@@ -71,9 +71,10 @@ function PreviewState({
         <div
           className={`
             w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border
-            ${isSuccess
-              ? "bg-emerald-100 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400"
-              : "bg-background border-border text-muted-foreground"
+            ${
+              isSuccess
+                ? "bg-emerald-100 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400"
+                : "bg-background border-border text-muted-foreground"
             }
           `}
         >

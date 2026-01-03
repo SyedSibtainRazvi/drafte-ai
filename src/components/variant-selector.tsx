@@ -239,9 +239,10 @@ export function VariantSelector({
                 className={`
                   relative border-2 rounded-lg p-4 cursor-pointer transition-all w-full block
                   focus-within:outline-none focus-within:ring-2 focus-within:ring-emerald-500
-                  ${isSelected
-                    ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-md"
-                    : "border-border hover:border-emerald-500/50 hover:shadow-sm"
+                  ${
+                    isSelected
+                      ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-md"
+                      : "border-border hover:border-emerald-500/50 hover:shadow-sm"
                   }
                 `}
               >
@@ -274,9 +275,10 @@ export function VariantSelector({
                   <div
                     className={`
                       w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors shrink-0 ml-4
-                      ${isSelected
-                        ? "border-emerald-500 bg-emerald-500 text-white"
-                        : "border-muted-foreground/30 bg-transparent"
+                      ${
+                        isSelected
+                          ? "border-emerald-500 bg-emerald-500 text-white"
+                          : "border-muted-foreground/30 bg-transparent"
                       }
                     `}
                   >
