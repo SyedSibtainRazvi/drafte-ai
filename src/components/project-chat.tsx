@@ -1,7 +1,14 @@
 "use client";
 
 import { Loader2, Send } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "@/components/ui/button";
 import {
   ChatContainerContent,
@@ -30,220 +37,242 @@ type Message = {
 interface ProjectChatProps {
   projectId: string;
   onDiscoveryDone?: (discovery: DiscoveryOutput) => void;
+  onContentDone?: () => void;
 }
 
-export function ProjectChat({ projectId, onDiscoveryDone }: ProjectChatProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+export interface ProjectChatHandle {
+  sendMessage: (text: string) => Promise<void>;
+}
 
-  useEffect(() => {
-    async function loadHistory() {
-      const res = await fetch(`/api/chat/history?projectId=${projectId}`);
-      if (!res.ok) return;
-      const data: Message[] = await res.json();
-      setMessages(
-        data.map((m) => ({
-          role: m.role,
-          content: m.content,
-        })),
-      );
-    }
-    loadHistory();
-  }, [projectId]);
+export const ProjectChat = forwardRef<ProjectChatHandle, ProjectChatProps>(
+  ({ projectId, onDiscoveryDone, onContentDone }, ref) => {
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [input, setInput] = useState("");
+    const [loading, setLoading] = useState(false);
 
-  const hasTriggeredRef = useRef(false);
+    useEffect(() => {
+      async function loadHistory() {
+        const res = await fetch(`/api/chat/history?projectId=${projectId}`);
+        if (!res.ok) return;
+        const data: Message[] = await res.json();
+        setMessages(
+          data.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+        );
+      }
+      loadHistory();
+    }, [projectId]);
 
-  const streamResponse = useCallback(
-    async (userInput: string) => {
-      setLoading(true);
+    const hasTriggeredRef = useRef(false);
 
-      try {
-        const res = await fetch("/api/chat", {
-          method: "POST",
-          body: JSON.stringify({
-            input: userInput,
-            runId: projectId,
-          }),
-        });
+    const streamResponse = useCallback(
+      async (userInput: string) => {
+        setLoading(true);
 
-        if (!res.body) return;
+        try {
+          const res = await fetch("/api/chat", {
+            method: "POST",
+            body: JSON.stringify({
+              input: userInput,
+              runId: projectId,
+            }),
+          });
 
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
+          if (!res.body) return;
 
-        let assistantContent = "";
-        setMessages((m) => [...m, { role: "assistant", content: "" }]);
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
 
-        let buffer = "";
+          let assistantContent = "";
+          setMessages((m) => [...m, { role: "assistant", content: "" }]);
 
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
+          let buffer = "";
 
-          buffer += decoder.decode(value, { stream: true });
-          const parts = buffer.split("\n\n");
-          buffer = parts.pop() || "";
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
 
-          for (const evt of parts) {
-            if (!evt.startsWith("data: ")) continue;
+            buffer += decoder.decode(value, { stream: true });
+            const parts = buffer.split("\n\n");
+            buffer = parts.pop() || "";
 
-            const msgBody = evt.replace("data: ", "").trim();
-            if (!msgBody) continue;
+            for (const evt of parts) {
+              if (!evt.startsWith("data: ")) continue;
 
-            try {
-              const event = JSON.parse(msgBody);
+              const msgBody = evt.replace("data: ", "").trim();
+              if (!msgBody) continue;
 
-              if (event.type === "chat_token") {
-                assistantContent += event.value;
-                setMessages((m) => {
-                  const copy = [...m];
-                  copy[copy.length - 1] = {
-                    role: "assistant",
-                    content: assistantContent,
-                  };
-                  return copy;
-                });
-              } else if (event.type === "discovery_done") {
-                // Notify parent component about discovery completion
-                if (onDiscoveryDone && event.value) {
-                  onDiscoveryDone(event.value);
-                }
-              } else if (event.type === "chat_done") {
-                setLoading(false);
-                // If no chat tokens were received, fill with default message
-                setMessages((m) => {
-                  const copy = [...m];
-                  const last = copy[copy.length - 1];
-                  if (
-                    last?.role === "assistant" &&
-                    last.content.trim() === ""
-                  ) {
+              try {
+                const event = JSON.parse(msgBody);
+
+                if (event.type === "chat_token") {
+                  assistantContent += event.value;
+                  setMessages((m) => {
+                    const copy = [...m];
                     copy[copy.length - 1] = {
                       role: "assistant",
-                      content:
-                        "I've analyzed your requirements and created a structure for your project. You can see the components in the preview.",
+                      content: assistantContent,
                     };
+                    return copy;
+                  });
+                } else if (event.type === "discovery_done") {
+                  // Notify parent component about discovery completion
+                  if (onDiscoveryDone && event.value) {
+                    onDiscoveryDone(event.value);
                   }
-                  return copy;
-                });
-              } else if (event.type === "error") {
-                console.error(event.message);
-                setLoading(false);
+                } else if (event.type === "content_done") {
+                  if (onContentDone) {
+                    onContentDone();
+                  }
+                } else if (event.type === "chat_done") {
+                  setLoading(false);
+                  // If no chat tokens were received, fill with default message
+                  setMessages((m) => {
+                    const copy = [...m];
+                    const last = copy[copy.length - 1];
+                    if (
+                      last?.role === "assistant" &&
+                      last.content.trim() === ""
+                    ) {
+                      copy[copy.length - 1] = {
+                        role: "assistant",
+                        content:
+                          "I've analyzed your requirements and created a structure for your project. You can see the components in the preview.",
+                      };
+                    }
+                    return copy;
+                  });
+                } else if (event.type === "error") {
+                  console.error(event.message);
+                  setLoading(false);
+                }
+              } catch (e) {
+                console.error("Failed to parse SSE", e);
               }
-            } catch (e) {
-              console.error("Failed to parse SSE", e);
             }
           }
+        } catch (error) {
+          console.error("Stream error", error);
+          setLoading(false);
         }
-      } catch (error) {
-        console.error("Stream error", error);
-        setLoading(false);
-      }
-    },
-    [projectId, onDiscoveryDone],
-  );
+      },
+      [projectId, onDiscoveryDone, onContentDone],
+    );
 
-  async function sendMessage() {
-    if (!input.trim() || loading) return;
+    const sendMessage = useCallback(
+      async (text: string) => {
+        if (!text.trim() || loading) return;
+        setMessages((m) => [...m, { role: "user", content: text }]);
+        await streamResponse(text);
+      },
+      [loading, streamResponse],
+    );
 
-    const currentInput = input;
-    setMessages((m) => [...m, { role: "user", content: currentInput }]);
-    setInput("");
-    await streamResponse(currentInput);
-  }
+    useImperativeHandle(ref, () => ({
+      sendMessage,
+    }));
 
-  useEffect(() => {
-    if (
-      messages.length === 1 &&
-      messages[0].role === "user" &&
-      !loading &&
-      !hasTriggeredRef.current
-    ) {
-      hasTriggeredRef.current = true;
-      streamResponse(messages[0].content);
+    async function handleManualSubmit() {
+      if (!input.trim() || loading) return;
+      const currentInput = input;
+      setInput("");
+      await sendMessage(currentInput);
     }
-  }, [messages, loading, streamResponse]);
 
-  return (
-    <div className="flex flex-col bg-background/50 border border-border/60 rounded-xl overflow-hidden h-full w-full text-xs">
-      <ChatContainerRoot className="flex-1 px-4 py-4">
-        <ChatContainerContent className="space-y-4">
-          {messages.map((m, i) => {
-            const isAssistant = m.role === "assistant";
-            return (
-              <MessageComponent
-                key={`${m.role}-${i}`}
-                className={cn(
-                  "animate-in fade-in slide-in-from-bottom-2 duration-300",
-                  m.role === "user" ? "justify-end" : "justify-start",
-                )}
-              >
+    useEffect(() => {
+      if (
+        messages.length === 1 &&
+        messages[0].role === "user" &&
+        !loading &&
+        !hasTriggeredRef.current
+      ) {
+        hasTriggeredRef.current = true;
+        streamResponse(messages[0].content);
+      }
+    }, [messages, loading, streamResponse]);
+
+    return (
+      <div className="flex flex-col bg-background/50 border border-border/60 rounded-xl overflow-hidden h-full w-full text-xs">
+        <ChatContainerRoot className="flex-1 px-4 py-4">
+          <ChatContainerContent className="space-y-4">
+            {messages.map((m, i) => {
+              const isAssistant = m.role === "assistant";
+              return (
+                <MessageComponent
+                  key={`${m.role}-${i}`}
+                  className={cn(
+                    "animate-in fade-in slide-in-from-bottom-2 duration-300",
+                    m.role === "user" ? "justify-end" : "justify-start",
+                  )}
+                >
+                  <div className="max-w-[90%] sm:max-w-[80%]">
+                    <MessageContent
+                      className={cn(
+                        "shadow-sm transition-all py-2 px-3",
+                        isAssistant
+                          ? "bg-muted/50 border border-border/60 rounded-2xl rounded-tl-none"
+                          : "bg-primary text-primary-foreground rounded-2xl rounded-br-none",
+                      )}
+                    >
+                      {isAssistant ? (
+                        <Markdown className="prose-xs">{m.content}</Markdown>
+                      ) : (
+                        <p className="whitespace-pre-wrap leading-relaxed">
+                          {m.content}
+                        </p>
+                      )}
+                    </MessageContent>
+                  </div>
+                </MessageComponent>
+              );
+            })}
+
+            {loading && (
+              <MessageComponent className="justify-start animate-in fade-in duration-300">
                 <div className="max-w-[90%] sm:max-w-[80%]">
-                  <MessageContent
-                    className={cn(
-                      "shadow-sm transition-all py-2 px-3",
-                      isAssistant
-                        ? "bg-muted/50 border border-border/60 rounded-2xl rounded-tl-none"
-                        : "bg-primary text-primary-foreground rounded-2xl rounded-br-none",
-                    )}
-                  >
-                    {isAssistant ? (
-                      <Markdown className="prose-xs">{m.content}</Markdown>
-                    ) : (
-                      <p className="whitespace-pre-wrap leading-relaxed">
-                        {m.content}
-                      </p>
-                    )}
+                  <MessageContent className="bg-muted/50 border border-border/60 rounded-2xl rounded-tl-none py-3 px-3">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span className="font-medium">Agent is thinking</span>
+                    </div>
                   </MessageContent>
                 </div>
               </MessageComponent>
-            );
-          })}
+            )}
 
-          {loading && (
-            <MessageComponent className="justify-start animate-in fade-in duration-300">
-              <div className="max-w-[90%] sm:max-w-[80%]">
-                <MessageContent className="bg-muted/50 border border-border/60 rounded-2xl rounded-tl-none py-3 px-3">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    <span className="font-medium">Agent is thinking</span>
-                  </div>
-                </MessageContent>
-              </div>
-            </MessageComponent>
-          )}
+            <ChatContainerScrollAnchor />
+          </ChatContainerContent>
+        </ChatContainerRoot>
 
-          <ChatContainerScrollAnchor />
-        </ChatContainerContent>
-      </ChatContainerRoot>
-
-      <div className="p-4 pt-0">
-        <PromptInput
-          value={input}
-          onValueChange={setInput}
-          onSubmit={sendMessage}
-          isLoading={loading}
-          className="w-full bg-background border border-border/60 rounded-md shadow focus-within:ring-1 focus-within:ring-ring flex items-end pr-2"
-        >
-          <PromptInputTextarea
-            placeholder="Ask something about your project…"
-            className="flex-1 text-xs bg-transparent dark:bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0"
-          />
-          <PromptInputActions className="ml-2">
-            <PromptInputAction tooltip="Send message">
-              <Button
-                size="icon"
-                onClick={sendMessage}
-                disabled={loading || !input.trim()}
-                className="h-7 w-7 rounded-full transition-all active:scale-95 shrink-0"
-              >
-                <Send className="h-3.5 w-3.5" />
-              </Button>
-            </PromptInputAction>
-          </PromptInputActions>
-        </PromptInput>
+        <div className="p-4 pt-0">
+          <PromptInput
+            value={input}
+            onValueChange={setInput}
+            onSubmit={handleManualSubmit}
+            isLoading={loading}
+            className="w-full bg-background border border-border/60 rounded-md shadow focus-within:ring-1 focus-within:ring-ring flex items-end pr-2"
+          >
+            <PromptInputTextarea
+              placeholder="Ask something about your project…"
+              className="flex-1 text-xs bg-transparent dark:bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
+            <PromptInputActions className="ml-2">
+              <PromptInputAction tooltip="Send message">
+                <Button
+                  size="icon"
+                  onClick={handleManualSubmit}
+                  disabled={loading || !input.trim()}
+                  className="h-7 w-7 rounded-full transition-all active:scale-95 shrink-0"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                </Button>
+              </PromptInputAction>
+            </PromptInputActions>
+          </PromptInput>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  },
+);

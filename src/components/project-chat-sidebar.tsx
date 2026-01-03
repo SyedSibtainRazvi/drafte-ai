@@ -3,7 +3,7 @@
 import { UserButton } from "@clerk/nextjs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,7 +17,7 @@ import { ModeToggle } from "@/components/ui/theme-toggle";
 import type { Project } from "@/generated/prisma/client";
 import type { DiscoveryOutput } from "@/lib/agents/skills/discovery/schema";
 import logo from "../../public/drafte.svg";
-import { ProjectChat } from "./project-chat";
+import { ProjectChat, ProjectChatHandle } from "./project-chat";
 import { ProjectPreviewPanel } from "./project-preview-panel";
 
 interface ProjectChatSidebarProps {
@@ -26,6 +26,7 @@ interface ProjectChatSidebarProps {
 
 export function ProjectChatSidebar({ project }: ProjectChatSidebarProps) {
   const router = useRouter();
+  const chatRef = useRef<ProjectChatHandle>(null);
   const [localDiscovery, setLocalDiscovery] = useState<DiscoveryOutput | null>(
     null,
   );
@@ -38,6 +39,12 @@ export function ProjectChatSidebar({ project }: ProjectChatSidebarProps) {
   const handleDiscoveryDone = (discoveryData: DiscoveryOutput) => {
     setLocalDiscovery(discoveryData);
     router.refresh(); // Trigger server data refresh to get resolutionSpec
+  };
+
+  const handleSelectionComplete = async () => {
+    if (chatRef.current) {
+      await chatRef.current.sendMessage("Draft the content");
+    }
   };
 
   return (
@@ -62,8 +69,10 @@ export function ProjectChatSidebar({ project }: ProjectChatSidebarProps) {
         </SidebarHeader>
         <SidebarContent className="flex-1 overflow-hidden px-2 pb-2">
           <ProjectChat
+            ref={chatRef}
             projectId={project.id}
             onDiscoveryDone={handleDiscoveryDone}
+            onContentDone={() => router.refresh()}
           />
         </SidebarContent>
       </Sidebar>
@@ -76,7 +85,11 @@ export function ProjectChatSidebar({ project }: ProjectChatSidebarProps) {
             <ModeToggle />
           </nav>
         </header>
-        <ProjectPreviewPanel project={project} discovery={discovery} />
+        <ProjectPreviewPanel
+          project={project}
+          discovery={discovery}
+          onSelectionComplete={handleSelectionComplete}
+        />
       </SidebarInset>
     </>
   );
