@@ -45,14 +45,18 @@ export function ProjectChatSidebar({ project }: ProjectChatSidebarProps) {
       <Sidebar variant="floating">
         <SidebarHeader>
           <SidebarMenu>
-            <SidebarMenuItem className="p-2 flex items-center justify-start">
+            <SidebarMenuItem className="p-2 flex items-center justify-between w-full">
               <Image
                 src={logo}
                 alt="Drafte"
                 width={80}
                 height={80}
                 priority={true}
+                className="shrink-0"
               />
+              <span className="font-semibold text-sm truncate max-w-[220px] text-right">
+                {project.name || "Untitled Project"}
+              </span>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>

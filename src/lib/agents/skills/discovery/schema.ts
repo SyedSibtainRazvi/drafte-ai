@@ -115,6 +115,8 @@ export const DiscoveryOutputSchema = z.object({
     ])
     .nullable(),
   persona: z.string().nullable(), // e.g., "frontend developer with 3 years experience"
+  projectName: z.string().nullable().optional(),
+  projectDescription: z.string().nullable().optional(),
   layout: LayoutSchema,
   components: z.array(ComponentSchema),
 });

@@ -124,6 +124,8 @@ export async function POST(req: Request) {
           await prisma.project.update({
             where: { id: runId },
             data: {
+              name: intentSpecData.projectName,
+              description: intentSpecData.projectDescription,
               prompt: input.trim(),
               intentSpec: intentSpecData,
               intentSpecVersion: "discovery_v2",
