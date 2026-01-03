@@ -63,7 +63,7 @@ export async function POST(
       await tx.project.update({
         where: { id: projectId },
         data: {
-          status: "CONTENT_GENERATED", // Or another appropriate status
+          status: "CONTENT_GENERATING",
           updatedAt: new Date(),
         },
       });

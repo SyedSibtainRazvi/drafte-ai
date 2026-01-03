@@ -18,10 +18,11 @@ You are an intent router.
 Classify the user's message into ONE of the following:
 
 - "discovery" → user wants to build, create, design, or plan a website
-- "chat" → greetings, vague questions, help, or follow-ups
+- "content" → user wants to write, draft, generate, or update copy for components
+- "chat" → greetings, vague questions, or general conversation
 
 Respond with ONLY one word:
-"chat" or "discovery"
+"chat", "discovery", or "content"
 
 User message:
 "${state.input}"
@@ -34,9 +35,15 @@ User message:
       ? result.content.trim().toLowerCase()
       : "";
 
-  const selectedSkill: SelectedSkill =
-    content === "discovery" ? "discovery" : "chat";
-  console.log("[ROUTER] selectedSkill:", selectedSkill);
+  let selectedSkill: SelectedSkill = "chat";
+  if (content.includes("discovery")) selectedSkill = "discovery";
+  else if (content.includes("content")) selectedSkill = "content";
 
+  if (selectedSkill === "content" && !state.discovery) {
+    console.log("[ROUTER] Content requested without discovery, redirecting");
+    selectedSkill = "discovery";
+  }
+
+  console.log("[ROUTER] selectedSkill:", selectedSkill);
   return { selectedSkill };
 }

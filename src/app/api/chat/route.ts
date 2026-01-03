@@ -49,6 +49,12 @@ export async function POST(req: Request) {
     content: m.content,
   }));
 
+  // 3. Fetch project to hydrate state (e.g., discovery)
+  const project = await prisma.project.findUnique({
+    where: { id: runId },
+    select: { intentSpec: true },
+  });
+
   const workflow = await createWorkflow();
 
   const stream = new ReadableStream({
@@ -75,8 +81,10 @@ export async function POST(req: Request) {
           input,
           status: "STREAMING",
           history: conversationHistory,
-          discovery: null,
+          discovery:
+            (project?.intentSpec as unknown as DiscoveryOutput) || null,
           selectedSkill: null,
+          content: null,
         };
 
         const finalState = await workflow.invoke(initialState, {
