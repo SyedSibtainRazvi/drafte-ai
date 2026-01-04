@@ -49,6 +49,12 @@ export async function POST(req: Request) {
     content: m.content,
   }));
 
+  // 3. Fetch project to hydrate state (e.g., discovery)
+  const project = await prisma.project.findUnique({
+    where: { id: runId },
+    select: { intentSpec: true },
+  });
+
   const workflow = await createWorkflow();
 
   const stream = new ReadableStream({
@@ -59,6 +65,7 @@ export async function POST(req: Request) {
         | { type: "chat_token"; value: string }
         | { type: "chat_done" }
         | { type: "discovery_done"; value: DiscoveryOutput }
+        | { type: "content_done" }
         | { type: "error"; message: string };
 
       const send = (event: ChatEvent) => {
@@ -75,8 +82,10 @@ export async function POST(req: Request) {
           input,
           status: "STREAMING",
           history: conversationHistory,
-          discovery: null,
+          discovery:
+            (project?.intentSpec as unknown as DiscoveryOutput) || null,
           selectedSkill: null,
+          content: null,
         };
 
         const finalState = await workflow.invoke(initialState, {
@@ -94,8 +103,8 @@ export async function POST(req: Request) {
         });
 
         // 3. Handle Discovery Output
-        // Save intentSpec if the workflow generated or updated discovery data
-        if (finalState.discovery) {
+        // Save intentSpec ONLY if the discovery skill was actually run
+        if (finalState.selectedSkill === "discovery" && finalState.discovery) {
           console.log(`[API] Saving discovery intentSpec for project ${runId}`);
 
           // Serialize for Prisma Json field
@@ -116,6 +125,8 @@ export async function POST(req: Request) {
           await prisma.project.update({
             where: { id: runId },
             data: {
+              name: intentSpecData.projectName,
+              description: intentSpecData.projectDescription,
               prompt: input.trim(),
               intentSpec: intentSpecData,
               intentSpecVersion: "discovery_v2",
@@ -145,6 +156,24 @@ export async function POST(req: Request) {
                 value: assistantText,
               });
             }
+          }
+        }
+
+        // 4. Handle Content Generation Output
+        if (finalState.selectedSkill === "content") {
+          send({
+            type: "content_done",
+          });
+
+          if (!assistantText) {
+            assistantText =
+              "I've drafted the content for your project. You can see the final changes in the preview.";
+
+            // Stream the fallback message to the frontend
+            send({
+              type: "chat_token",
+              value: assistantText,
+            });
           }
         }
 

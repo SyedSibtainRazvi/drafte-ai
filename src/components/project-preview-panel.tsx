@@ -47,6 +47,7 @@ interface ComponentVariants {
 interface ProjectPreviewPanelProps {
   project: Project;
   discovery: DiscoveryOutput | null;
+  onSelectionComplete?: () => Promise<void>;
 }
 
 function PreviewState({
@@ -94,6 +95,7 @@ function PreviewState({
 export function ProjectPreviewPanel({
   project,
   discovery,
+  onSelectionComplete,
 }: ProjectPreviewPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -174,13 +176,20 @@ export function ProjectPreviewPanel({
         <VariantSelector
           projectId={project.id}
           components={getComponentVariants()}
+          onCompleteSuccess={onSelectionComplete}
         />
-      ) : project.status === "CONTENT_GENERATED" ||
-        project.status === "CONTENT_GENERATING" ? (
+      ) : project.status === "CONTENT_GENERATING" ? (
         <PreviewState
           icon={Sparkles}
-          title="Component Selection Complete!"
-          description="I've locked in your choices. Our Content Agent is now analyzing your requirements to draft personalized content for each section."
+          title="Component Selection Locked!"
+          description="I've locked in your choices. Our Content Agent is now analyzing your requirements to draft personalized copy for each section."
+          variant="success"
+        />
+      ) : project.status === "CONTENT_GENERATED" ? (
+        <PreviewState
+          icon={Sparkles}
+          title="Project Content Drafted!"
+          description="I've finished drafting personalized copy for all your selected components. You can see the updated version in the preview."
           variant="success"
         />
       ) : canReviewComponents && !showResolution ? (

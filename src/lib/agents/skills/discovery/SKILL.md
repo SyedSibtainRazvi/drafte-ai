@@ -36,6 +36,8 @@ All fields below MUST be present:
 - audience: string (e.g., "potential employers", "enterprise clients")
 - voice: "professional-friendly" | "casual-conversational" | "authoritative-expert" | "warm-personal" | "technical-precise" | null
 - persona: string | null
+- projectName: string | null (suggest a name for the project)
+- projectDescription: string | null (brief description of the project)
 - layout:
   - type: "single-page"
   - flow: ["Navigation", "Hero", "Footer"]

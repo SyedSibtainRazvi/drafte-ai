@@ -1,1 +1,1 @@
-export type SelectedSkill = "chat" | "discovery";
+export type SelectedSkill = "chat" | "discovery" | "content";

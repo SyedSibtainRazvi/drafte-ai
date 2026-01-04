@@ -31,6 +31,7 @@ interface ComponentVariants {
 interface VariantSelectorProps {
   projectId: string;
   components: ComponentVariants[];
+  onCompleteSuccess?: () => Promise<void>;
 }
 
 // Sample content data for component previews
@@ -121,6 +122,7 @@ function ComponentRenderer({
 export function VariantSelector({
   projectId,
   components,
+  onCompleteSuccess,
 }: VariantSelectorProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -191,6 +193,10 @@ export function VariantSelector({
       console.log("Components saved successfully!");
       router.push(`/projects/${projectId}`);
       router.refresh();
+
+      if (onCompleteSuccess) {
+        await onCompleteSuccess();
+      }
     } catch (err) {
       console.error(err);
       setSaveError("An error occurred while saving. Please try again.");
