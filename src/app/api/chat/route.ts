@@ -65,6 +65,7 @@ export async function POST(req: Request) {
         | { type: "chat_token"; value: string }
         | { type: "chat_done" }
         | { type: "discovery_done"; value: DiscoveryOutput }
+        | { type: "content_done" }
         | { type: "error"; message: string };
 
       const send = (event: ChatEvent) => {
@@ -155,6 +156,24 @@ export async function POST(req: Request) {
                 value: assistantText,
               });
             }
+          }
+        }
+
+        // 4. Handle Content Generation Output
+        if (finalState.selectedSkill === "content") {
+          send({
+            type: "content_done",
+          });
+
+          if (!assistantText) {
+            assistantText =
+              "I've drafted the content for your project. You can see the final changes in the preview.";
+
+            // Stream the fallback message to the frontend
+            send({
+              type: "chat_token",
+              value: assistantText,
+            });
           }
         }
 

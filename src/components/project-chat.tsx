@@ -132,15 +132,12 @@ export const ProjectChat = forwardRef<ProjectChatHandle, ProjectChatProps>(
                   setMessages((m) => {
                     const copy = [...m];
                     const last = copy[copy.length - 1];
+                    // Clean up empty assistant bubble if backend sent nothing (though it should have)
                     if (
                       last?.role === "assistant" &&
                       last.content.trim() === ""
                     ) {
-                      copy[copy.length - 1] = {
-                        role: "assistant",
-                        content:
-                          "I've analyzed your requirements and created a structure for your project. You can see the components in the preview.",
-                      };
+                      return copy.slice(0, -1);
                     }
                     return copy;
                   });
