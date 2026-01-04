@@ -103,8 +103,8 @@ export async function POST(req: Request) {
         });
 
         // 3. Handle Discovery Output
-        // Save intentSpec if the workflow generated or updated discovery data
-        if (finalState.discovery) {
+        // Save intentSpec ONLY if the discovery skill was actually run
+        if (finalState.selectedSkill === "discovery" && finalState.discovery) {
           console.log(`[API] Saving discovery intentSpec for project ${runId}`);
 
           // Serialize for Prisma Json field

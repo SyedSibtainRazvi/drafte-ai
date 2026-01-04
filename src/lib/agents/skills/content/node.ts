@@ -62,7 +62,7 @@ export async function contentNode(
   // 3. Setup LLM
   const llm = new ChatOpenAI({
     modelName: "gpt-4o",
-    temperature: 0.7,
+    temperature: 0.4,
     modelKwargs: {
       response_format: { type: "json_object" },
     },
@@ -146,7 +146,8 @@ INSTRUCTIONS:
     },
   });
 
-  console.log("[Content Skill] Content generation complete & saved.");
+  console.log(`[Content Skill] Content generation completed successfully!`);
+  console.log(`[Content Skill] Final output:`, JSON.stringify(output, null, 2));
 
   return {
     content: output,
