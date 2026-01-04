@@ -62,7 +62,7 @@ export async function contentNode(
   // 3. Setup LLM
   const llm = new ChatOpenAI({
     modelName: "gpt-4o",
-    temperature: 0.4,
+    temperature: 0.3,
     modelKwargs: {
       response_format: { type: "json_object" },
     },
