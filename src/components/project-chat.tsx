@@ -36,6 +36,7 @@ type Message = {
 
 interface ProjectChatProps {
   projectId: string;
+  projectStatus?: string;
   onDiscoveryDone?: (discovery: DiscoveryOutput) => void;
   onContentDone?: () => void;
 }
@@ -45,10 +46,18 @@ export interface ProjectChatHandle {
 }
 
 export const ProjectChat = forwardRef<ProjectChatHandle, ProjectChatProps>(
-  ({ projectId, onDiscoveryDone, onContentDone }, ref) => {
+  ({ projectId, projectStatus, onDiscoveryDone, onContentDone }, ref) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // Disable manual chat once discovery is complete
+    const isChatDisabled = !!(
+      projectStatus &&
+      ["DISCOVERED", "CONTENT_GENERATING", "CONTENT_GENERATED"].includes(
+        projectStatus,
+      )
+    );
 
     useEffect(() => {
       async function loadHistory() {
@@ -249,18 +258,32 @@ export const ProjectChat = forwardRef<ProjectChatHandle, ProjectChatProps>(
             onValueChange={setInput}
             onSubmit={handleManualSubmit}
             isLoading={loading}
-            className="w-full bg-background border border-border/60 rounded-md shadow focus-within:ring-1 focus-within:ring-ring flex items-end pr-2"
+            disabled={isChatDisabled}
+            className={cn(
+              "w-full bg-background border border-border/60 rounded-md shadow flex items-end pr-2",
+              !isChatDisabled
+                ? "focus-within:ring-1 focus-within:ring-ring"
+                : "",
+              isChatDisabled
+                ? "opacity-60 grayscale-[0.5] cursor-not-allowed"
+                : "",
+            )}
           >
             <PromptInputTextarea
-              placeholder="Ask something about your project…"
-              className="flex-1 text-xs bg-transparent dark:bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              placeholder={
+                isChatDisabled
+                  ? "Chat is disabled during selection & drafting"
+                  : "Ask something about your project…"
+              }
+              disabled={isChatDisabled}
+              className="flex-1 text-xs bg-transparent dark:bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 disabled:cursor-not-allowed"
             />
             <PromptInputActions className="ml-2">
-              <PromptInputAction tooltip="Send message">
+              <PromptInputAction tooltip={isChatDisabled ? "" : "Send message"}>
                 <Button
                   size="icon"
                   onClick={handleManualSubmit}
-                  disabled={loading || !input.trim()}
+                  disabled={loading || !input.trim() || isChatDisabled}
                   className="h-7 w-7 rounded-full transition-all active:scale-95 shrink-0"
                 >
                   <Send className="h-3.5 w-3.5" />

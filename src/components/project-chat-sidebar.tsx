@@ -71,6 +71,7 @@ export function ProjectChatSidebar({ project }: ProjectChatSidebarProps) {
           <ProjectChat
             ref={chatRef}
             projectId={project.id}
+            projectStatus={project.status}
             onDiscoveryDone={handleDiscoveryDone}
             onContentDone={() => router.refresh()}
           />
